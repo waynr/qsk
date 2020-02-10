@@ -28,7 +28,7 @@ dependencies = [
  "evdev-sys",
  "libc",
  "log",
- "nix",
+ "nix 0.13.1",
 ]
 
 [[package]]
@@ -71,6 +71,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "nix"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50e4785f2c3b7589a0d0c1dd60285e1188adac4006e8abd6dd578e1567027363"
+dependencies = [
+ "bitflags",
+ "cc",
+ "cfg-if",
+ "libc",
+ "void",
+]
+
+[[package]]
 name = "pkg-config"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -81,6 +94,7 @@ name = "quantum-soft-keyboard"
 version = "0.1.0"
 dependencies = [
  "evdev-rs",
+ "nix 0.17.0",
 ]
 
 [[package]]

@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 evdev-rs = "~0.3"
+nix = "~0.17"
