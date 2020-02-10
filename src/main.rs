@@ -8,8 +8,15 @@ use evdev_rs::InputEvent;
 use evdev_rs::TimeVal;
 use evdev_rs::UInputDevice;
 
+struct Layer {}
+
 struct Handler {
     output_device: UInputDevice,
+    active_layers: Vec<Layer>,
+}
+
+enum ControlCode {
+    Exit,
 }
 
 impl Handler {
@@ -33,6 +40,16 @@ impl Handler {
         })?;
         Ok(())
     }
+
+    fn handle(&mut self, ie: &InputEvent) -> Result<Option<ControlCode>, Box<dyn error::Error>> {
+        match ie.event_code {
+            enums::EventCode::EV_KEY(enums::EV_KEY::KEY_PAUSE) => {
+                return Ok(Some(ControlCode::Exit))
+            }
+            _ => self.send_key(ie.time.clone(), ie.event_code.clone(), ie.value)?,
+        }
+        Ok(None)
+    }
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
@@ -42,20 +59,22 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     d.set_fd(f)?;
     d.grab(GrabMode::Grab)?;
 
-    let handler = Handler {
+    let mut h = Handler {
         output_device: UInputDevice::create_from_device(&d)?,
+        active_layers: Vec::new(),
     };
 
     loop {
         let a = d.next_event(evdev_rs::ReadFlag::NORMAL | evdev_rs::ReadFlag::BLOCKING)?;
 
-        match (&a.1.event_type, &a.1.event_code) {
-            (enums::EventType::EV_KEY, ec) => match ec {
-                enums::EventCode::EV_KEY(enums::EV_KEY::KEY_PAUSE) => break,
-                _ => handler.send_key(a.1.time, ec.clone(), a.1.value)?,
+        match &a.1.event_type {
+            enums::EventType::EV_KEY => match h.handle(&a.1)? {
+                Some(ControlCode::Exit) => break,
+                None => (),
             },
-            (_, _) => (),
-        }
+            _ => (),
+        };
     }
+
     Ok(())
 }
