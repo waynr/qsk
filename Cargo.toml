@@ -9,3 +9,10 @@ edition = "2018"
 [dependencies]
 evdev-rs = "~0.3"
 nix = "~0.17"
+
+# cli
+clap = "~2.33"
+fern = "~0.5" # log implementation
+
+# logging
+log = "~0.4"

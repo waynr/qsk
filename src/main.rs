@@ -1,12 +1,17 @@
 use std::error;
 use std::fs::File;
+use std::path::PathBuf;
 
+use clap::value_t;
 use evdev_rs::enums;
 use evdev_rs::Device;
 use evdev_rs::GrabMode;
 use evdev_rs::InputEvent;
 use evdev_rs::TimeVal;
 use evdev_rs::UInputDevice;
+
+mod cli;
+use cli::get_clap_app;
 
 struct Layer {}
 
@@ -53,7 +58,9 @@ impl Handler {
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
-    let f = File::open("/dev/input/by-path/platform-i8042-serio-0-event-kbd")?;
+    let matches = get_clap_app()?;
+    let input_events_file = value_t!(matches, "device-file", PathBuf)?;
+    let f = File::open(input_events_file)?;
 
     let mut d = Device::new().unwrap();
     d.set_fd(f)?;
