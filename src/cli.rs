@@ -31,7 +31,6 @@ pub fn get_clap_app<'a>() -> Result<ArgMatches<'a>, Box<dyn std::error::Error>> 
         1 => log::LevelFilter::Info,
         2 => log::LevelFilter::Debug,
         3 => log::LevelFilter::Trace,
-        4 => log::LevelFilter::Info,
         _ => log::LevelFilter::Warn,
     };
 

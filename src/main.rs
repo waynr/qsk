@@ -9,6 +9,7 @@ use evdev_rs::GrabMode;
 use evdev_rs::InputEvent;
 use evdev_rs::TimeVal;
 use evdev_rs::UInputDevice;
+use log::debug;
 
 mod cli;
 use cli::get_clap_app;
@@ -31,6 +32,7 @@ impl Handler {
         ec: enums::EventCode,
         value: i32,
     ) -> Result<(), Box<dyn error::Error>> {
+        debug!("{:?}", ec);
         self.output_device.write_event(&InputEvent {
             time: time.clone(),
             event_type: enums::EventType::EV_KEY,
