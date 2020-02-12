@@ -64,6 +64,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let input_events_file = value_t!(matches, "device-file", PathBuf)?;
     let f = File::open(input_events_file)?;
 
+    std::thread::sleep(std::time::Duration::from_millis(1000));
     let mut d = Device::new().unwrap();
     d.set_fd(f)?;
     d.grab(GrabMode::Grab)?;
