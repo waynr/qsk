@@ -32,7 +32,6 @@ impl Handler {
         ec: enums::EventCode,
         value: i32,
     ) -> Result<(), Box<dyn error::Error>> {
-        debug!("{:?}", ec);
         self.output_device.write_event(&InputEvent {
             time: time.clone(),
             event_type: enums::EventType::EV_KEY,
@@ -53,7 +52,10 @@ impl Handler {
             enums::EventCode::EV_KEY(enums::EV_KEY::KEY_PAUSE) => {
                 return Ok(Some(ControlCode::Exit))
             }
-            _ => self.send_key(ie.time.clone(), ie.event_code.clone(), ie.value)?,
+            _ => {
+                debug!("{:?} {:?}", ie.event_code, ie.value);
+                self.send_key(ie.time.clone(), ie.event_code.clone(), ie.value)?;
+            }
         }
         Ok(None)
     }
