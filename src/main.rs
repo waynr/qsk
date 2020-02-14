@@ -7,7 +7,6 @@ use evdev_rs::enums;
 use evdev_rs::Device;
 use evdev_rs::GrabMode;
 use evdev_rs::InputEvent;
-use evdev_rs::TimeVal;
 use evdev_rs::UInputDevice;
 use log::debug;
 
