@@ -14,11 +14,26 @@ use log::debug;
 mod cli;
 use cli::get_clap_app;
 
-struct Layer {}
+struct Passthrough {}
+
+impl InputTransformer for Passthrough {
+    fn transform(&mut self, ie: &InputEvent) -> InputEvent {
+        InputEvent {
+            time: ie.time.clone(),
+            event_code: ie.event_code.clone(),
+            event_type: ie.event_type.clone(),
+            value: ie.value.clone(),
+        }
+    }
+}
+
+trait InputTransformer {
+    fn transform(&mut self, ie: &InputEvent) -> InputEvent;
+}
 
 struct Handler {
     output_device: UInputDevice,
-    active_layers: Vec<Layer>,
+    input_transformer: Box<dyn InputTransformer>,
 }
 
 enum ControlCode {
@@ -26,20 +41,10 @@ enum ControlCode {
 }
 
 impl Handler {
-    fn send_key(
-        &self,
-        time: TimeVal,
-        ec: enums::EventCode,
-        value: i32,
-    ) -> Result<(), Box<dyn error::Error>> {
+    fn send_key(&self, ie: &InputEvent) -> Result<(), Box<dyn error::Error>> {
+        self.output_device.write_event(ie)?;
         self.output_device.write_event(&InputEvent {
-            time: time.clone(),
-            event_type: enums::EventType::EV_KEY,
-            event_code: ec,
-            value: value,
-        })?;
-        self.output_device.write_event(&InputEvent {
-            time: time.clone(),
+            time: ie.time.clone(),
             event_type: enums::EventType::EV_SYN,
             event_code: enums::EventCode::EV_SYN(enums::EV_SYN::SYN_REPORT),
             value: 0,
@@ -54,7 +59,8 @@ impl Handler {
             }
             _ => {
                 debug!("{:?} {:?}", ie.event_code, ie.value);
-                self.send_key(ie.time.clone(), ie.event_code.clone(), ie.value)?;
+                let transformed = &mut self.input_transformer.transform(ie);
+                self.send_key(&transformed)?;
             }
         }
         Ok(None)
@@ -73,7 +79,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     let mut h = Handler {
         output_device: UInputDevice::create_from_device(&d)?,
-        active_layers: Vec::new(),
+        input_transformer: Box::new(Passthrough {}),
     };
 
     loop {
