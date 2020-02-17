@@ -7,6 +7,7 @@ use async_std::task;
 use async_std::sync::Sender;
 use async_std::sync::Receiver;
 use async_std::prelude::FutureExt;
+use async_std::prelude::StreamExt;
 use clap::value_t;
 use evdev_rs;
 use evdev_rs::enums;
@@ -59,20 +60,16 @@ struct Handler {
 }
 
 impl Handler {
-    async fn handle(mut self, r: Receiver<InputEvent>, s: Sender<InputEvent>) {
-        loop {
-            match r.recv().await {
-                Some(ie) => {
-                    let iev = self.input_transformer.transform(&ie);
-                    for cc in iev.iter() {
-                        match cc {
-                            ControlCode::InputEvent(v) => s.send(v.clone()).await,
-                            ControlCode::Exit => return,
-                        }
-                    }
+    async fn handle(mut self, mut r: Receiver<InputEvent>, s: Sender<InputEvent>) {
+        while let Some(ie) = r.next().await {
+            debug!("received InputEvent from input task");
+            let iev = self.input_transformer.transform(&ie);
+            for cc in iev.iter() {
+                match cc {
+                    ControlCode::InputEvent(v) => s.send(v.clone()).await,
+                    ControlCode::Exit => return,
                 }
-                None => return,
-            };
+            }
         }
     }
 }
