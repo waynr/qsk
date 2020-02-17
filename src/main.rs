@@ -91,19 +91,24 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
     let (handler_sender, output_receiver) = channel(1);
 
     let handler = Handler{input_transformer: Box::new(Passthrough{})};
+    debug!("creating handler task");
     let handler_task = task::Builder::new().name("handler".to_string())
         .spawn(handler.handle(handler_receiver, handler_sender))?;
 
+    debug!("creating input task");
     let input_task = task::Builder::new().name("input".to_string()).spawn(async move {
         loop {
             let t = myd.next_event(evdev_rs::ReadFlag::NORMAL | evdev_rs::ReadFlag::BLOCKING);
+            debug!("received InputEvent from keyboard");
             match t {
                 Ok(a) => input_sender.send(a.1).await,
                 Err(errno) => error!("error reading from keyboard device: {:?}", errno),
             }
+            debug!("sent InputEvent to handler");
         }
     })?;
 
+    debug!("creating output task");
     let output_task = task::Builder::new().name("output".to_string()).spawn(async move {
         loop {
             let a = match output_receiver.recv().await {
@@ -114,6 +119,7 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
                 Ok(_) => (),
                 Err(errno) => error!("error writing to keyboard device: {:?}", errno),
             }
+            debug!("sent InputEvent to virtual keyboard");
         }
     })?;
 
