@@ -30,29 +30,29 @@ enum ControlCode {
 struct Passthrough {}
 
 impl InputTransformer for Passthrough {
-    fn transform(&mut self, ie: &InputEvent) -> Vec<ControlCode> {
+    fn transform(&mut self, ie: &InputEvent) -> Option<Vec<ControlCode>> {
         match &ie.event_code {
             enums::EventCode::EV_KEY(enums::EV_KEY::KEY_PAUSE) => {
-                vec![ControlCode::Exit]
+                Some(vec![ControlCode::Exit])
             }
             enums::EventCode::EV_KEY(_) => {
                 debug!("{:?} {:?}", ie.event_code, ie.value);
-                vec![ControlCode::InputEvent(
+                Some(vec![ControlCode::InputEvent(
                     InputEvent {
                         time: ie.time.clone(),
                         event_code: ie.event_code.clone(),
                         event_type: ie.event_type.clone(),
                         value: ie.value.clone(),
                     }
-                )]
+                )])
             }
-            _ => { vec![] }
+            _ => None,
         }
     }
 }
 
 trait InputTransformer {
-    fn transform(&mut self, ie: &InputEvent) -> Vec<ControlCode>;
+    fn transform(&mut self, ie: &InputEvent) -> Option<Vec<ControlCode>>;
 }
 
 struct Handler {
@@ -63,11 +63,12 @@ impl Handler {
     async fn handle(mut self, mut r: Receiver<InputEvent>, s: Sender<InputEvent>) {
         while let Some(ie) = r.next().await {
             debug!("received InputEvent from input task");
-            let iev = self.input_transformer.transform(&ie);
-            for cc in iev.iter() {
-                match cc {
-                    ControlCode::InputEvent(v) => s.send(v.clone()).await,
-                    ControlCode::Exit => return,
+            if let Some(iev) = self.input_transformer.transform(&ie) {
+                for cc in iev.iter() {
+                    match cc {
+                        ControlCode::InputEvent(v) => s.send(v.clone()).await,
+                        ControlCode::Exit => return,
+                    }
                 }
             }
         }
