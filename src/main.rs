@@ -105,9 +105,8 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
     let myd = Device::new(d);
     let ui = myd.new_uinput_device()?;
 
-
-    let (input_sender, handler_receiver) = channel(25);
-    let (handler_sender, output_receiver) = channel(25);
+    let (input_sender, handler_receiver) = channel(1);
+    let (handler_sender, output_receiver) = channel(1);
 
     let handler = Handler{input_transformer: Box::new(Passthrough{})};
     let handler_task = task::spawn(handler.handle(handler_receiver, handler_sender));
