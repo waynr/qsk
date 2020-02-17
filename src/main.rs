@@ -50,21 +50,6 @@ impl InputTransformer for Passthrough {
     }
 }
 
-struct TediousTransformer {}
-
-impl InputTransformer for TediousTransformer {
-    fn transform(&mut self, ie: &InputEvent) -> Vec<ControlCode> {
-        vec![ControlCode::InputEvent(
-            InputEvent {
-                time: ie.time.clone(),
-                event_code: ie.event_code.clone(),
-                event_type: ie.event_type.clone(),
-                value: ie.value.clone(),
-            }
-        )]
-    }
-}
-
 trait InputTransformer {
     fn transform(&mut self, ie: &InputEvent) -> Vec<ControlCode>;
 }
