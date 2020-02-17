@@ -1,5 +1,7 @@
-use clap::{App, Arg, ArgMatches};
+use std::panic;
 
+use async_std;
+use clap::{App, Arg, ArgMatches};
 use fern;
 use log;
 
@@ -49,12 +51,15 @@ pub fn get_clap_app<'a>() -> Result<ArgMatches<'a>, Box<dyn std::error::Error>> 
 fn setup_logger_fern(level: Option<log::LevelFilter>) -> Result<(), fern::InitError> {
     let mut dispatch = fern::Dispatch::new()
         .format(|out, message, record| {
-            out.finish(format_args!(
-                "[{}][{}] {}",
-                record.target(),
-                record.level(),
-                message
-            ))
+            let result = panic::catch_unwind(|| async_std::task::current());
+            let name = match result {
+                Ok(task) => match task.name() {
+                    Some(s) => s.to_string(),
+                    None => "root".to_string(),
+                },
+                Err(_) => "root".to_string(),
+            };
+            out.finish(format_args!("{} {:?}: {}", record.level(), name, message))
         })
         .chain(std::io::stdout())
         .chain(fern::log_file("output.log")?);
