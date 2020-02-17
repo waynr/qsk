@@ -88,7 +88,7 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
     let ui = myd.new_uinput_device()?;
 
     let (input_sender, handler_receiver) = channel(1);
-    let (handler_sender, output_receiver) = channel(1);
+    let (handler_sender, mut output_receiver) = channel(1);
 
     let handler = Handler{input_transformer: Box::new(Passthrough{})};
     debug!("creating handler task");
@@ -110,12 +110,9 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
 
     debug!("creating output task");
     let output_task = task::Builder::new().name("output".to_string()).spawn(async move {
-        loop {
-            let a = match output_receiver.recv().await {
-                Some(t) => t,
-                None => break,
-            };
-            match ui.send_key(&a) {
+        while let Some(ie) = output_receiver.next().await {
+            debug!("received InputEvent from handler");
+            match ui.send_key(&ie) {
                 Ok(_) => (),
                 Err(errno) => error!("error writing to keyboard device: {:?}", errno),
             }
@@ -123,8 +120,7 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
         }
     })?;
 
-    let f = input_task.race(output_task).race(handler_task);
-    f.await;
+    input_task.race(output_task).race(handler_task).await;
 
     Ok(())
 }
