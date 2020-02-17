@@ -109,9 +109,10 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
     let (handler_sender, output_receiver) = channel(1);
 
     let handler = Handler{input_transformer: Box::new(Passthrough{})};
-    let handler_task = task::spawn(handler.handle(handler_receiver, handler_sender));
+    let handler_task = task::Builder::new().name("handler".to_string())
+        .spawn(handler.handle(handler_receiver, handler_sender))?;
 
-    let input_task = task::spawn(async move {
+    let input_task = task::Builder::new().name("input".to_string()).spawn(async move {
         loop {
             let t = myd.next_event(evdev_rs::ReadFlag::NORMAL | evdev_rs::ReadFlag::BLOCKING);
             match t {
@@ -119,9 +120,9 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
                 Err(errno) => error!("error reading from keyboard device: {:?}", errno),
             }
         }
-    });
+    })?;
 
-    let output_task = task::spawn(async move {
+    let output_task = task::Builder::new().name("output".to_string()).spawn(async move {
         loop {
             let a = match output_receiver.recv().await {
                 Some(t) => t,
@@ -132,7 +133,7 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
                 Err(errno) => error!("error writing to keyboard device: {:?}", errno),
             }
         }
-    });
+    })?;
 
     let f = input_task.race(output_task).race(handler_task);
     f.await;
