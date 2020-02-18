@@ -10,7 +10,6 @@ use async_std::prelude::FutureExt;
 use async_std::prelude::StreamExt;
 use clap::value_t;
 use evdev_rs;
-use evdev_rs::enums;
 use evdev_rs::GrabMode;
 use evdev_rs::InputEvent;
 use log::debug;
@@ -22,38 +21,10 @@ use device::linux::Device;
 mod cli;
 use cli::get_clap_app;
 
-enum ControlCode {
-    InputEvent(InputEvent),
-    Exit,
-}
-
-struct Passthrough {}
-
-impl InputTransformer for Passthrough {
-    fn transform(&mut self, ie: &InputEvent) -> Option<Vec<ControlCode>> {
-        match &ie.event_code {
-            enums::EventCode::EV_KEY(enums::EV_KEY::KEY_PAUSE) => {
-                Some(vec![ControlCode::Exit])
-            }
-            enums::EventCode::EV_KEY(_) => {
-                debug!("{:?} {:?}", ie.event_code, ie.value);
-                Some(vec![ControlCode::InputEvent(
-                    InputEvent {
-                        time: ie.time.clone(),
-                        event_code: ie.event_code.clone(),
-                        event_type: ie.event_type.clone(),
-                        value: ie.value.clone(),
-                    }
-                )])
-            }
-            _ => None,
-        }
-    }
-}
-
-trait InputTransformer {
-    fn transform(&mut self, ie: &InputEvent) -> Option<Vec<ControlCode>>;
-}
+mod input;
+use input::transformer::InputTransformer;
+use input::transformer::Passthrough;
+use input::transformer::ControlCode;
 
 struct Handler {
     input_transformer: Box<dyn InputTransformer + Send>,
