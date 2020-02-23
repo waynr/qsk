@@ -23,7 +23,7 @@ use cli::get_clap_app;
 
 mod input;
 use input::transformer::InputTransformer;
-use input::transformer::Passthrough;
+use input::transformer::Composer;
 use input::transformer::ControlCode;
 
 struct Handler {
@@ -39,6 +39,7 @@ impl Handler {
                     match cc {
                         ControlCode::InputEvent(v) => s.send(v.clone()).await,
                         ControlCode::Exit => return,
+                        _ => continue,
                     }
                 }
             }
@@ -62,7 +63,7 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
     let (input_sender, handler_receiver) = channel(1);
     let (handler_sender, mut output_receiver) = channel(1);
 
-    let handler = Handler{input_transformer: Box::new(Passthrough{})};
+    let handler = Handler{input_transformer: Box::new(Composer::new())};
     debug!("creating handler task");
     let handler_task = task::Builder::new().name("handler".to_string())
         .spawn(handler.handle(handler_receiver, handler_sender))?;
