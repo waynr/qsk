@@ -1,36 +1,29 @@
-use evdev_rs::enums;
-use evdev_rs::enums::EV_KEY::*;
-use evdev_rs::InputEvent;
 use log::debug;
 
+use super::super::input::event;
+
 pub enum ControlCode {
-    InputEvent(InputEvent),
-    DeactivateLayer(enums::EventCode),
+    KeyboardEvent(event::KeyboardEvent),
+    DeactivateLayer(event::KeyCode),
     Exit,
 }
 
 pub struct Passthrough {}
 
 impl InputTransformer for Passthrough {
-    fn transform(&mut self, ie: &InputEvent) -> Option<Vec<ControlCode>> {
-        match &ie.event_code {
-            enums::EventCode::EV_KEY(enums::EV_KEY::KEY_PAUSE) => Some(vec![ControlCode::Exit]),
-            enums::EventCode::EV_KEY(_) => {
-                debug!("{:?} {:?}", ie.event_code, ie.value);
-                Some(vec![ControlCode::InputEvent(InputEvent {
-                    time: ie.time.clone(),
-                    event_code: ie.event_code.clone(),
-                    event_type: ie.event_type.clone(),
-                    value: ie.value.clone(),
-                })])
+    fn transform(&mut self, e: event::KeyboardEvent) -> Option<Vec<ControlCode>> {
+        match e.code {
+            event::KeyCode::KC_PAUSE => Some(vec![ControlCode::Exit]),
+            _ => {
+                debug!("{:?} {:?}", e.code, e.state);
+                Some(vec![ControlCode::KeyboardEvent(e)])
             }
-            _ => None,
         }
     }
 }
 
 pub trait InputTransformer {
-    fn transform(&mut self, ie: &InputEvent) -> Option<Vec<ControlCode>>;
+    fn transform(&mut self, e: event::KeyboardEvent) -> Option<Vec<ControlCode>>;
 }
 
 pub struct Composer {
@@ -41,8 +34,8 @@ pub struct Composer {
 
 impl Composer {
     pub fn new() -> Self {
-        Composer{
-            base: Box::new(Passthrough{}),
+        Composer {
+            base: Box::new(Passthrough {}),
             active: Vec::new(),
             deferred_actions: Vec::new(),
         }
@@ -50,13 +43,13 @@ impl Composer {
 }
 
 impl InputTransformer for Composer {
-    fn transform(&mut self, ie: &InputEvent) -> Option<Vec<ControlCode>> {
+    fn transform(&mut self, e: event::KeyboardEvent) -> Option<Vec<ControlCode>> {
         for t in &mut self.active {
-            match t.transform(ie) {
+            match t.transform(e) {
                 Some(v) => return Some(v),
                 None => continue,
             }
         }
-        self.base.transform(ie)
+        self.base.transform(e)
     }
 }
