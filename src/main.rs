@@ -1,4 +1,5 @@
 use std::error;
+use std::convert::Into;
 use std::fs::File;
 use std::path::PathBuf;
 
@@ -74,7 +75,7 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
             let t = myd.next_event(evdev_rs::ReadFlag::NORMAL | evdev_rs::ReadFlag::BLOCKING);
             debug!("received InputEvent from keyboard");
             match t {
-                Ok(a) => input_sender.send(a.1).await,
+                Ok(a) => input_sender.send(a.into()).await,
                 Err(errno) => error!("error reading from keyboard device: {:?}", errno),
             }
             debug!("sent InputEvent to handler");
@@ -85,7 +86,7 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
     let output_task = task::Builder::new().name("output".to_string()).spawn(async move {
         while let Some(ie) = output_receiver.next().await {
             debug!("received InputEvent from handler");
-            match ui.send_key(&ie) {
+            match ui.send_key(ie.into()) {
                 Ok(_) => (),
                 Err(errno) => error!("error writing to keyboard device: {:?}", errno),
             }
