@@ -24,8 +24,10 @@ use cli::get_clap_app;
 mod input;
 use input::event::KeyboardEvent;
 use input::transformer::InputTransformer;
-use input::transformer::Composer;
+use input::transformer::LayerComposer;
 use input::transformer::ControlCode;
+
+use self::input::event;
 
 struct Handler {
     input_transformer: Box<dyn InputTransformer + Send>,
@@ -64,7 +66,7 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
     let (input_sender, handler_receiver) = channel(1);
     let (handler_sender, mut output_receiver) = channel(1);
 
-    let handler = Handler{input_transformer: Box::new(Composer::new())};
+    let handler = Handler{input_transformer: Box::new(LayerComposer::new())};
     debug!("creating handler task");
     let handler_task = task::Builder::new().name("handler".to_string())
         .spawn(handler.handle(handler_receiver, handler_sender))?;
