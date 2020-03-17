@@ -1,5 +1,4 @@
 use std::error;
-use std::convert::Into;
 use std::fs::File;
 use std::path::PathBuf;
 
@@ -26,8 +25,6 @@ use input::event::KeyboardEvent;
 use input::transformer::InputTransformer;
 use input::transformer::LayerComposer;
 use input::transformer::ControlCode;
-
-use self::input::event;
 
 struct Handler {
     input_transformer: Box<dyn InputTransformer + Send>,
