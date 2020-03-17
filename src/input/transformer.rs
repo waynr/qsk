@@ -74,21 +74,27 @@ impl LayerComposer {
     pub fn new() -> Self {
         let mut layers = Vec::with_capacity(8);
 
-        layers[LAYERS::BASE.to_usize()] = Layer {
-            map: [(KC_F, tap_toggle(KC_F, LAYERS::NAVIGATION))]
-                .iter()
-                .cloned()
-                .collect(),
-            active: true,
-        };
+        layers.insert(
+            LAYERS::BASE.to_usize(),
+            Layer {
+                map: [(KC_F, tap_toggle(KC_F, LAYERS::NAVIGATION))]
+                    .iter()
+                    .cloned()
+                    .collect(),
+                active: true,
+            },
+        );
 
-        layers[LAYERS::NAVIGATION.to_usize()] = Layer {
-            map: [(KC_F, tap_toggle(KC_F, LAYERS::NAVIGATION))]
-                .iter()
-                .cloned()
-                .collect(),
-            active: false,
-        };
+        layers.insert(
+            LAYERS::NAVIGATION.to_usize(),
+            Layer {
+                map: [(KC_F, tap_toggle(KC_F, LAYERS::NAVIGATION))]
+                    .iter()
+                    .cloned()
+                    .collect(),
+                active: false,
+            },
+        );
 
         LayerComposer {
             base: Box::new(Passthrough {}),
