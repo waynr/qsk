@@ -9,7 +9,10 @@ use evdev_rs::enums;
 use evdev_rs::InputEvent;
 use evdev_rs::TimeVal;
 use log::error;
-use nix::errno::Errno;
+
+#[path = "../error.rs"]
+mod error;
+use error::Result;
 
 use super::super::input::event;
 
@@ -26,7 +29,7 @@ impl Device {
         }
     }
 
-    pub fn next_event(&self, flags: evdev_rs::ReadFlag) -> Result<event::KeyboardEvent, Errno> {
+    pub fn next_event(&self, flags: evdev_rs::ReadFlag) -> Result<event::KeyboardEvent> {
         let guard = match self.inner.lock() {
             Ok(a) => a,
             Err(p_err) => {
@@ -39,7 +42,7 @@ impl Device {
         Ok(ie_into_ke(ev.1))
     }
 
-    pub fn new_uinput_device(&self) -> Result<UInputDevice, Errno> {
+    pub fn new_uinput_device(&self) -> Result<UInputDevice> {
         let guard = match self.inner.lock() {
             Ok(a) => a,
             Err(p_err) => {
@@ -62,7 +65,7 @@ pub struct UInputDevice {
 unsafe impl Send for UInputDevice {}
 
 impl UInputDevice {
-    pub fn send_key(&self, e: event::KeyboardEvent) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn send_key(&self, e: event::KeyboardEvent) -> Result<()> {
         let guard = match self.inner.lock() {
             Ok(a) => a,
             Err(p_err) => {
@@ -409,10 +412,11 @@ fn ec_into_kc(ec: enums::EventCode) -> event::KeyCode {
         enums::EventCode::EV_KEY(enums::EV_KEY::KEY_TITLE) => event::KeyCode::KC_TITLE,
         enums::EventCode::EV_KEY(enums::EV_KEY::KEY_SUBTITLE) => event::KeyCode::KC_SUBTITLE,
         enums::EventCode::EV_KEY(enums::EV_KEY::KEY_ANGLE) => event::KeyCode::KC_ANGLE,
-        enums::EventCode::EV_KEY(enums::EV_KEY::KEY_ZOOM) => event::KeyCode::KC_ZOOM,
-        enums::EventCode::EV_KEY(enums::EV_KEY::KEY_MODE) => event::KeyCode::KC_MODE,
+        enums::EventCode::EV_KEY(enums::EV_KEY::KEY_FULL_SCREEN) => event::KeyCode::KC_FULL_SCREEN,
         enums::EventCode::EV_KEY(enums::EV_KEY::KEY_KEYBOARD) => event::KeyCode::KC_KEYBOARD,
-        enums::EventCode::EV_KEY(enums::EV_KEY::KEY_SCREEN) => event::KeyCode::KC_SCREEN,
+        enums::EventCode::EV_KEY(enums::EV_KEY::KEY_ASPECT_RATIO) => {
+            event::KeyCode::KC_ASPECT_RATIO
+        }
         enums::EventCode::EV_KEY(enums::EV_KEY::KEY_PC) => event::KeyCode::KC_PC,
         enums::EventCode::EV_KEY(enums::EV_KEY::KEY_TV) => event::KeyCode::KC_TV,
         enums::EventCode::EV_KEY(enums::EV_KEY::KEY_TV2) => event::KeyCode::KC_TV2,

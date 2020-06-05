@@ -75,7 +75,7 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
             debug!("received KeyboardEvent from keyboard");
             match t {
                 Ok(a) => input_sender.send(a).await,
-                Err(errno) => error!("error reading from keyboard device: {:?}", errno),
+                Err(err) => error!("error reading from keyboard device: {:?}", err),
             }
             debug!("sent KeyboardEvent to handler");
         }
@@ -87,7 +87,7 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
             debug!("received KeyboardEvent from handler");
             match ui.send_key(e) {
                 Ok(_) => (),
-                Err(errno) => error!("error writing to keyboard device: {:?}", errno),
+                Err(err) => error!("error writing to keyboard device: {:?}", err),
             }
             debug!("sent InputEvent to virtual keyboard");
         }

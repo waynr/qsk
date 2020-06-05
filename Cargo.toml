@@ -7,10 +7,10 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-evdev-rs = { git = "https://github.com/ndesh26/evdev-rs", ref = "5a7a8484cf07ecad41710ca4399582cf8f565e90" }
-nix = "~0.17"
+evdev-rs = "0.4"
 async-std = { version = "~1.5", features = ["unstable"] }
 chrono = "~0.4"
+thiserror = "1.0"
 
 # cli
 clap = "~2.33"
