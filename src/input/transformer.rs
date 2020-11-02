@@ -1,4 +1,5 @@
 use log::debug;
+use maplit::hashmap;
 use std::collections::HashMap;
 
 use super::super::input::event;
@@ -31,21 +32,16 @@ pub trait InputTransformer {
 
 struct Layer {
     map: HashMap<event::KeyCode, Vec<ControlCode>>,
-    active: bool,
 }
 
 impl Layer {
     fn new() -> Self {
         Layer {
             map: HashMap::new(),
-            active: false,
         }
     }
 
     fn transform(&mut self, e: event::KeyboardEvent) -> Option<Vec<ControlCode>> {
-        if !self.active {
-            return None;
-        }
         None
     }
 }
@@ -53,11 +49,12 @@ impl Layer {
 pub struct LayerComposer {
     base: Box<dyn InputTransformer + Send>,
     layers: Vec<Layer>,
+    top_layer: usize,
 }
 
 enum LAYERS {
-    BASE = 0,
-    NAVIGATION = 1,
+    HomerowCodeRight = 0,
+    Navigation = 1,
 }
 
 impl LAYERS {
@@ -70,35 +67,43 @@ fn tap_toggle(key: event::KeyCode, layer: LAYERS) -> Vec<ControlCode> {
     Vec::new()
 }
 
+fn key(k: event::KeyboardEvent) -> Vec<ControlCode> {
+    vec![ControlCode::KeyboardEvent(k)]
+}
+
 impl LayerComposer {
     pub fn new() -> Self {
         let mut layers = Vec::with_capacity(8);
 
         layers.insert(
-            LAYERS::BASE.to_usize(),
+            LAYERS::HomerowCodeRight.to_usize(),
             Layer {
-                map: [(KC_F, tap_toggle(KC_F, LAYERS::NAVIGATION))]
-                    .iter()
-                    .cloned()
-                    .collect(),
-                active: true,
+                map: hashmap!(
+                    KC_F => tap_toggle(KC_F, LAYERS::Navigation)
+                ),
             },
         );
 
         layers.insert(
-            LAYERS::NAVIGATION.to_usize(),
+            LAYERS::Navigation.to_usize(),
             Layer {
-                map: [(KC_F, tap_toggle(KC_F, LAYERS::NAVIGATION))]
-                    .iter()
-                    .cloned()
-                    .collect(),
-                active: false,
+                map: hashmap!(
+                    KC_Y => key(KC_HOME),
+                    KC_U => key(KC_PAGEDOWN),
+                    KC_I => key(KC_PAGEUP),
+                    KC_O => key(KC_END),
+                    KC_H => key(KC_LEFT),
+                    KC_J => key(KC_DOWN),
+                    KC_K => key(KC_UP),
+                    KC_SEMICOLON => key(KC_RIGHT),
+                ),
             },
         );
 
         LayerComposer {
             base: Box::new(Passthrough {}),
             layers: layers,
+            top_layer: 0,
         }
     }
 
