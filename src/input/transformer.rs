@@ -8,7 +8,9 @@ use super::super::input::event::KeyCode::*;
 #[derive(Clone)]
 pub enum ControlCode {
     KeyboardEvent(event::KeyboardEvent),
+    KeyMap(event::KeyCode),
     DeactivateLayer(event::KeyCode),
+    TapToggle(LAYERS, event::KeyCode),
     Exit,
 }
 
@@ -32,26 +34,44 @@ pub trait InputTransformer {
 
 struct Layer {
     map: HashMap<event::KeyCode, Vec<ControlCode>>,
+    active: bool,
 }
 
 impl Layer {
     fn new() -> Self {
         Layer {
             map: HashMap::new(),
+            active: false,
         }
     }
 
     fn transform(&mut self, e: event::KeyboardEvent) -> Option<Vec<ControlCode>> {
-        None
+        match self.map.get(&e.code) {
+            Some(ccs) => {
+                let mut output: Vec<ControlCode> = Vec::new();
+                for cc in ccs {
+                    match cc {
+                        ControlCode::KeyMap(kc) => {
+                            let mut cloned = e.clone();
+                            cloned.code = *kc;
+                            output.push(ControlCode::KeyboardEvent(cloned));
+                        }
+                        _ => output.push(cc.clone()),
+                    }
+                }
+                Some(output)
+            }
+            None => None,
+        }
     }
 }
 
 pub struct LayerComposer {
     base: Box<dyn InputTransformer + Send>,
     layers: Vec<Layer>,
-    top_layer: usize,
 }
 
+#[derive(Clone)]
 enum LAYERS {
     HomerowCodeRight = 0,
     Navigation = 1,
@@ -63,12 +83,12 @@ impl LAYERS {
     }
 }
 
-fn tap_toggle(key: event::KeyCode, layer: LAYERS) -> Vec<ControlCode> {
-    Vec::new()
+fn key(k: event::KeyCode) -> Vec<ControlCode> {
+    vec![ControlCode::KeyMap(k)]
 }
 
-fn key(k: event::KeyboardEvent) -> Vec<ControlCode> {
-    vec![ControlCode::KeyboardEvent(k)]
+fn tap_toggle(layer: LAYERS, kc: event::KeyCode) -> Vec<ControlCode> {
+    vec![ControlCode::TapToggle(layer, kc)]
 }
 
 impl LayerComposer {
@@ -78,8 +98,9 @@ impl LayerComposer {
         layers.insert(
             LAYERS::HomerowCodeRight.to_usize(),
             Layer {
+                active: true,
                 map: hashmap!(
-                    KC_F => tap_toggle(KC_F, LAYERS::Navigation)
+                    KC_F => tap_toggle(LAYERS::Navigation, KC_F)
                 ),
             },
         );
@@ -87,6 +108,7 @@ impl LayerComposer {
         layers.insert(
             LAYERS::Navigation.to_usize(),
             Layer {
+                active: false,
                 map: hashmap!(
                     KC_Y => key(KC_HOME),
                     KC_U => key(KC_PAGEDOWN),
@@ -103,20 +125,34 @@ impl LayerComposer {
         LayerComposer {
             base: Box::new(Passthrough {}),
             layers: layers,
-            top_layer: 0,
         }
     }
 
-    fn handle_control_codes(&mut self, ccs: Vec<ControlCode>) -> Vec<ControlCode> {
-        ccs
+    fn handle_control_codes(
+        &mut self,
+        e: &event::KeyboardEvent,
+        ccs: Vec<ControlCode>,
+    ) -> Vec<ControlCode> {
+        let mut output: Vec<ControlCode> = Vec::new();
+        for cc in ccs {
+            match cc {
+                // TODO: implement tap toggle timing calculation to differentiate between a tap and
+                // a toggle.
+                ControlCode::TapToggle(layer, key) => {
+                    self.layers[layer.to_usize()].active = true;
+                }
+                _ => output.push(cc),
+            }
+        }
+        output
     }
 }
 
 impl InputTransformer for LayerComposer {
     fn transform(&mut self, e: event::KeyboardEvent) -> Option<Vec<ControlCode>> {
-        for l in &mut self.layers {
+        for l in &mut self.layers.iter_mut().rev() {
             match l.transform(e) {
-                Some(ccs) => return Some(self.handle_control_codes(ccs)),
+                Some(ccs) => return Some(self.handle_control_codes(&e, ccs)),
                 None => continue,
             }
         }
