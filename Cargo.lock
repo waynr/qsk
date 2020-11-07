@@ -297,6 +297,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "galvanic-assert"
+version = "0.8.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3afb916c829538b4f18402c9d0be7484a6f5539442e19ed67ddfb7782604bb40"
+
+[[package]]
 name = "hermit-abi"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -549,6 +555,7 @@ dependencies = [
  "clap",
  "evdev-rs",
  "fern",
+ "galvanic-assert",
  "log",
  "maplit",
  "thiserror",

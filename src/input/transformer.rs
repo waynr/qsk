@@ -4,8 +4,9 @@ use std::collections::HashMap;
 
 use super::super::input::event;
 use super::super::input::event::KeyCode::*;
+use super::super::input::event::KeyState::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ControlCode {
     KeyboardEvent(event::KeyboardEvent),
     KeyMap(event::KeyCode),
@@ -38,13 +39,6 @@ struct Layer {
 }
 
 impl Layer {
-    fn new() -> Self {
-        Layer {
-            map: HashMap::new(),
-            active: false,
-        }
-    }
-
     fn transform(&mut self, e: event::KeyboardEvent) -> Option<Vec<ControlCode>> {
         match self.map.get(&e.code) {
             Some(ccs) => {
@@ -71,7 +65,7 @@ pub struct LayerComposer {
     layers: Vec<Layer>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 enum LAYERS {
     HomerowCodeRight = 0,
     Navigation = 1,
@@ -158,4 +152,67 @@ impl InputTransformer for LayerComposer {
         }
         self.base.transform(e)
     }
+}
+
+// test outline
+//
+// test simultaneous layer activation
+// test tap toggle timing
+//
+#[cfg(test)]
+mod layer_composer {
+    use super::*;
+    use chrono::prelude::*;
+    use galvanic_assert::matchers::collection::*;
+    use galvanic_assert::matchers::*;
+    use galvanic_assert::*;
+
+    struct TestHarness {
+        layer_composer: LayerComposer,
+        static_now: DateTime<Local>,
+    }
+
+    impl TestHarness {
+        fn new() -> Self {
+            TestHarness {
+                layer_composer: LayerComposer::new(),
+                static_now: Local::now(),
+            }
+        }
+
+        fn ke(&self, kc: event::KeyCode, ks: event::KeyState) -> event::KeyboardEvent {
+            event::KeyboardEvent {
+                time: self.static_now.clone(),
+                code: kc,
+                state: ks,
+            }
+        }
+
+        fn validate_single(
+            &mut self,
+            input: event::KeyboardEvent,
+            output: Option<event::KeyboardEvent>,
+        ) {
+            let result = self.layer_composer.transform(input);
+            match output {
+                None => assert_that!(&result, eq(None)),
+                Some(e) => {
+                    let expect = vec![ControlCode::KeyboardEvent(e)];
+                    assert_that!(&result.unwrap(), contains_in_order(expect));
+                }
+            };
+        }
+    }
+
+    #[test]
+    fn passthrough() {
+        let mut th = TestHarness::new();
+
+        th.validate_single(th.ke(KC_E, Down), Some(th.ke(KC_E, Down)));
+        th.validate_single(th.ke(KC_E, Up), Some(th.ke(KC_E, Up)));
+        //th.validate_single(th.ke(KC_F, Down), None);
+    }
+
+    #[test]
+    fn toggle() {}
 }

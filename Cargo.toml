@@ -19,3 +19,6 @@ fern = "~0.5" # log implementation
 
 # logging
 log = "~0.4"
+
+[dev-dependencies]
+galvanic-assert = "~0.8"
