@@ -1,13 +1,14 @@
 use std::error;
 use std::fs::File;
 use std::path::PathBuf;
+use std::time::SystemTime;
 
-use async_std::sync::channel;
-use async_std::task;
-use async_std::sync::Sender;
-use async_std::sync::Receiver;
 use async_std::prelude::FutureExt;
 use async_std::prelude::StreamExt;
+use async_std::sync::channel;
+use async_std::sync::Receiver;
+use async_std::sync::Sender;
+use async_std::task;
 use clap::value_t;
 use evdev_rs;
 use evdev_rs::GrabMode;
@@ -22,9 +23,9 @@ use cli::get_clap_app;
 
 mod input;
 use input::event::KeyboardEvent;
+use input::transformer::ControlCode;
 use input::transformer::InputTransformer;
 use input::transformer::LayerComposer;
-use input::transformer::ControlCode;
 
 struct Handler {
     input_transformer: Box<dyn InputTransformer + Send>,
@@ -63,35 +64,42 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
     let (input_sender, handler_receiver) = channel(1);
     let (handler_sender, mut output_receiver) = channel(1);
 
-    let handler = Handler{input_transformer: Box::new(LayerComposer::new())};
+    let handler = Handler {
+        input_transformer: Box::new(LayerComposer::new(SystemTime::now)),
+    };
     debug!("creating handler task");
-    let handler_task = task::Builder::new().name("handler".to_string())
+    let handler_task = task::Builder::new()
+        .name("handler".to_string())
         .spawn(handler.handle(handler_receiver, handler_sender))?;
 
     debug!("creating input task");
-    let input_task = task::Builder::new().name("input".to_string()).spawn(async move {
-        loop {
-            let t = myd.next_event(evdev_rs::ReadFlag::NORMAL | evdev_rs::ReadFlag::BLOCKING);
-            debug!("received KeyboardEvent from keyboard");
-            match t {
-                Ok(a) => input_sender.send(a).await,
-                Err(err) => error!("error reading from keyboard device: {:?}", err),
+    let input_task = task::Builder::new()
+        .name("input".to_string())
+        .spawn(async move {
+            loop {
+                let t = myd.next_event(evdev_rs::ReadFlag::NORMAL | evdev_rs::ReadFlag::BLOCKING);
+                debug!("received KeyboardEvent from keyboard");
+                match t {
+                    Ok(a) => input_sender.send(a).await,
+                    Err(err) => error!("error reading from keyboard device: {:?}", err),
+                }
+                debug!("sent KeyboardEvent to handler");
             }
-            debug!("sent KeyboardEvent to handler");
-        }
-    })?;
+        })?;
 
     debug!("creating output task");
-    let output_task = task::Builder::new().name("output".to_string()).spawn(async move {
-        while let Some(e) = output_receiver.next().await {
-            debug!("received KeyboardEvent from handler");
-            match ui.send_key(e) {
-                Ok(_) => (),
-                Err(err) => error!("error writing to keyboard device: {:?}", err),
+    let output_task = task::Builder::new()
+        .name("output".to_string())
+        .spawn(async move {
+            while let Some(e) = output_receiver.next().await {
+                debug!("received KeyboardEvent from handler");
+                match ui.send_key(e) {
+                    Ok(_) => (),
+                    Err(err) => error!("error writing to keyboard device: {:?}", err),
+                }
+                debug!("sent InputEvent to virtual keyboard");
             }
-            debug!("sent InputEvent to virtual keyboard");
-        }
-    })?;
+        })?;
 
     input_task.race(output_task).race(handler_task).await;
 
