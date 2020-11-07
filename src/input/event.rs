@@ -1,4 +1,4 @@
-use chrono;
+use std::time::SystemTime;
 
 // KeyboardEvent is a QSK-specific struct modeled in large part after evdev_rs::InputEvent.
 // Although evdev_rs::InputEvent actually supports a large range of Linux-specific input events, we
@@ -7,7 +7,7 @@ use chrono;
 // support input event systems for other OSes in the future.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct KeyboardEvent {
-    pub time: chrono::DateTime<chrono::Local>,
+    pub time: SystemTime,
     pub code: KeyCode,
     pub state: KeyState,
 }

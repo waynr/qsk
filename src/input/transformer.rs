@@ -162,21 +162,21 @@ impl InputTransformer for LayerComposer {
 #[cfg(test)]
 mod layer_composer {
     use super::*;
-    use chrono::prelude::*;
     use galvanic_assert::matchers::collection::*;
     use galvanic_assert::matchers::*;
     use galvanic_assert::*;
+    use std::time::SystemTime;
 
     struct TestHarness {
         layer_composer: LayerComposer,
-        static_now: DateTime<Local>,
+        static_now: SystemTime,
     }
 
     impl TestHarness {
         fn new() -> Self {
             TestHarness {
                 layer_composer: LayerComposer::new(),
-                static_now: Local::now(),
+                static_now: SystemTime::now(),
             }
         }
 

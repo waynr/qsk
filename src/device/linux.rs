@@ -1,9 +1,10 @@
 use std::convert::TryFrom;
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::time::Duration;
 use std::time::SystemTime;
+use std::time::UNIX_EPOCH;
 
-use chrono::{Local, TimeZone};
 use evdev_rs;
 use evdev_rs::enums;
 use evdev_rs::InputEvent;
@@ -91,22 +92,29 @@ impl UInputDevice {
 
 fn ke_into_ie(kv: event::KeyboardEvent) -> Option<evdev_rs::InputEvent> {
     match kc_into_ec(kv.code) {
-        Some(ec) => Some(InputEvent {
-            time: TimeVal {
-                tv_sec: kv.time.timestamp(),
-                tv_usec: kv.time.timestamp_subsec_micros() as i64,
-            },
-            event_type: enums::EventType::EV_KEY,
-            event_code: ec,
-            value: kv.state as i32,
-        }),
+        Some(ec) => {
+            let d = match kv.time.duration_since(UNIX_EPOCH) {
+                Ok(n) => n,
+                Err(_) => Duration::new(0, 0),
+            };
+            Some(InputEvent {
+                time: TimeVal {
+                    tv_sec: d.as_secs() as i64,
+                    tv_usec: d.subsec_micros() as i64,
+                },
+                event_type: enums::EventType::EV_KEY,
+                event_code: ec,
+                value: kv.state as i32,
+            })
+        }
         None => None,
     }
 }
 
 fn ie_into_ke(ev: evdev_rs::InputEvent) -> event::KeyboardEvent {
     event::KeyboardEvent {
-        time: Local.timestamp(ev.time.tv_sec, ev.time.tv_usec as u32),
+        time: UNIX_EPOCH
+            + Duration::new(ev.time.tv_sec as u64, ev.time.tv_usec as u32 * 1000 as u32),
         code: ec_into_kc(ev.event_code),
         state: i32_into_ks(ev.value),
     }

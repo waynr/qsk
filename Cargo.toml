@@ -9,7 +9,6 @@ edition = "2018"
 [dependencies]
 evdev-rs = "0.4"
 async-std = { version = "~1.5", features = ["unstable"] }
-chrono = "~0.4"
 thiserror = "1.0"
 maplit = "1.0"
 
