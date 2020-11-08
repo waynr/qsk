@@ -2,7 +2,7 @@ use log::debug;
 use maplit::hashmap;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant, SystemTime};
+use std::time::{Duration, SystemTime};
 
 use super::super::input::event;
 use super::super::input::event::KeyCode::*;
@@ -68,7 +68,7 @@ where
 {
     base: Box<dyn InputTransformer + Send>,
     layers: Vec<Layer>,
-    timers: HashMap<event::KeyCode, Instant>,
+    timers: HashMap<event::KeyCode, SystemTime>,
 
     now_fn: T,
 }
@@ -139,6 +139,13 @@ where
         (self.now_fn)()
     }
 
+    fn duration_since(&self, t: SystemTime) -> Duration {
+        match self.now().duration_since(t) {
+            Ok(d) =>  d,
+            Err(_) => Duration::new(0, 0),
+        }
+    }
+
     fn key_up_and_down(&self, k: event::KeyCode) -> Vec<ControlCode> {
         vec![
             ControlCode::KeyboardEvent(event::KeyboardEvent {
@@ -166,10 +173,10 @@ where
                 // a toggle.
                 ControlCode::TapToggle(layer, key) => match (e.state, self.timers.get(&key)) {
                     (Down, None) => {
-                        self.timers.insert(key, Instant::now());
+                        self.timers.insert(key, self.now());
                     }
                     (Held, Some(t)) => {
-                        if Instant::now().duration_since(*t) > Duration::from_millis(180) {
+                        if self.duration_since(*t) > Duration::from_millis(180) {
                             self.layers[layer].active = true;
                             self.timers.remove(&key);
                         }
@@ -185,7 +192,7 @@ where
                         }
                     }
                     (Up, Some(t)) => {
-                        if Instant::now().duration_since(*t) < Duration::from_millis(180) {
+                        if self.duration_since(*t) < Duration::from_millis(180) {
                             self.key_up_and_down(key)
                                 .iter()
                                 .for_each(|cc| output.push(*cc));
@@ -316,7 +323,8 @@ mod layer_composer {
         th.validate_single(th.ke(KC_J, Down), Some(th.ke(KC_J, Down)));
         th.validate_single(th.ke(KC_J, Up), Some(th.ke(KC_J, Up)));
 
-        // if layer is toggled, releasing tap toggle key should result in no keyboard events
+        // if layer is toggled, releasing tap toggle key after tap toggle timeout should result in
+        // no keyboard events
         th.validate_single(th.ke(KC_F, Down), None);
         fake_now
             .lock()
