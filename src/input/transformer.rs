@@ -1,6 +1,7 @@
 use log::debug;
 use maplit::hashmap;
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant, SystemTime};
 
 use super::super::input::event;
@@ -260,15 +261,51 @@ mod layer_composer {
         }
 
         fn validate_multiple(&mut self, input: event::KeyboardEvent, output: Vec<ControlCode>) {
-            let result = self.transform(input);
             assert_that!(&self.transform(input).unwrap(), contains_in_order(output));
         }
     }
 
+    struct FakeNow {
+        t: SystemTime,
+    }
+
+    impl FakeNow {
+        fn new() -> Self {
+            FakeNow {
+                t: SystemTime::now(),
+            }
+        }
+
+        fn now(&self) -> SystemTime {
+            self.t.clone()
+        }
+
+        fn adjust_now(&mut self, by: Duration) {
+            self.t += by;
+        }
+    }
+
+    #[test]
+    fn fake_now() {
+        let fake_now = Arc::new(Mutex::new(FakeNow::new()));
+        let c_fake_now = fake_now.clone();
+
+        let t1 = fake_now.lock().unwrap().now();
+        fake_now
+            .lock()
+            .unwrap()
+            .adjust_now(Duration::from_millis(1000));
+
+        let t2 = c_fake_now.lock().unwrap().now();
+
+        assert_eq!(t2, t1 + Duration::from_millis(1000));
+    }
+
     #[test]
     fn passthrough_no_active_layers() {
-        let now = SystemTime::now();
-        let mut th = LayerComposer::new(|| now);
+        let fake_now = Arc::new(Mutex::new(FakeNow::new()));
+        let c_fake_now = fake_now.clone();
+        let mut th = LayerComposer::new(|| c_fake_now.lock().unwrap().now());
 
         th.validate_single(th.ke(KC_E, Down), Some(th.ke(KC_E, Down)));
         th.validate_single(th.ke(KC_E, Up), Some(th.ke(KC_E, Up)));
@@ -279,7 +316,20 @@ mod layer_composer {
         th.validate_single(th.ke(KC_J, Down), Some(th.ke(KC_J, Down)));
         th.validate_single(th.ke(KC_J, Up), Some(th.ke(KC_J, Up)));
 
+        // if layer is toggled, releasing tap toggle key should result in no keyboard events
         th.validate_single(th.ke(KC_F, Down), None);
+        fake_now
+            .lock()
+            .unwrap()
+            .adjust_now(Duration::from_millis(1000));
+        th.validate_single(th.ke(KC_F, Up), None);
+
+        // ...unless we release tap toggle within the 180 millisecond timeout
+        th.validate_single(th.ke(KC_F, Down), None);
+        fake_now
+            .lock()
+            .unwrap()
+            .adjust_now(Duration::from_millis(10));
         th.validate_multiple(
             th.ke(KC_F, Up),
             vec![
