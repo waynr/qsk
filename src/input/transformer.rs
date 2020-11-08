@@ -62,15 +62,24 @@ impl Layer {
     }
 }
 
-pub struct LayerComposer<T>
-where
-    T: Fn() -> SystemTime,
-{
+trait Nower {
+    fn now(&self) -> SystemTime;
+}
+
+pub struct RealNower {}
+
+impl Nower for RealNower {
+    fn now(&self) -> SystemTime {
+        SystemTime::now()
+    }
+}
+
+pub struct LayerComposer {
     base: Box<dyn InputTransformer + Send>,
     layers: Vec<Layer>,
     timers: HashMap<event::KeyCode, SystemTime>,
 
-    now_fn: T,
+    nower: Box<dyn Nower + Send>,
 }
 
 #[derive(Clone, Debug, PartialEq, Copy)]
@@ -93,11 +102,8 @@ fn tap_toggle(layer: LAYERS, kc: event::KeyCode) -> Vec<ControlCode> {
     vec![ControlCode::TapToggle(layer.to_usize(), kc)]
 }
 
-impl<T> LayerComposer<T>
-where
-    T: Fn() -> SystemTime,
-{
-    pub fn new(now_fn: T) -> LayerComposer<T> {
+impl LayerComposer {
+    pub fn new() -> LayerComposer {
         let mut layers = Vec::with_capacity(8);
 
         layers.insert(
@@ -131,12 +137,12 @@ where
             base: Box::new(Passthrough {}),
             layers: layers,
             timers: HashMap::new(),
-            now_fn: now_fn,
+            nower: Box::new(RealNower{}),
         }
     }
 
     fn now(&self) -> SystemTime {
-        (self.now_fn)()
+        self.nower.now()
     }
 
     fn duration_since(&self, t: SystemTime) -> Duration {
@@ -212,10 +218,7 @@ where
     }
 }
 
-impl<T> InputTransformer for LayerComposer<T>
-where
-    T: Fn() -> SystemTime,
-{
+impl InputTransformer for LayerComposer {
     fn transform(&mut self, e: event::KeyboardEvent) -> Option<Vec<ControlCode>> {
         for l in &mut self.layers.iter_mut().rev() {
             match l.transform(e) {
@@ -240,13 +243,10 @@ mod layer_composer {
     use galvanic_assert::*;
     use std::time::SystemTime;
 
-    impl<T> LayerComposer<T>
-    where
-        T: Fn() -> SystemTime,
-    {
+    impl LayerComposer {
         fn ke(&self, kc: event::KeyCode, ks: event::KeyState) -> event::KeyboardEvent {
             event::KeyboardEvent {
-                time: (self.now_fn)(),
+                time: self.nower.now(),
                 code: kc,
                 state: ks,
             }
@@ -272,47 +272,50 @@ mod layer_composer {
         }
     }
 
+    #[derive(Clone)]
     struct FakeNow {
-        t: SystemTime,
+        t: Arc<Mutex<SystemTime>>,
     }
 
     impl FakeNow {
         fn new() -> Self {
             FakeNow {
-                t: SystemTime::now(),
+                t: Arc::new(Mutex::new(SystemTime::now())),
             }
         }
-
-        fn now(&self) -> SystemTime {
-            self.t.clone()
+        fn adjust_now(&self, by: Duration) {
+            let mut mut_ref = self.t.lock().unwrap();
+            *mut_ref += by;
         }
+    }
 
-        fn adjust_now(&mut self, by: Duration) {
-            self.t += by;
+    impl Nower for FakeNow {
+        fn now(&self) -> SystemTime {
+            self.t.lock().unwrap().clone()
         }
     }
 
     #[test]
     fn fake_now() {
-        let fake_now = Arc::new(Mutex::new(FakeNow::new()));
+        let fake_now = Box::new(FakeNow::new());
         let c_fake_now = fake_now.clone();
 
-        let t1 = fake_now.lock().unwrap().now();
-        fake_now
-            .lock()
-            .unwrap()
-            .adjust_now(Duration::from_millis(1000));
+        let t1 = fake_now.now();
+        fake_now.adjust_now(Duration::from_millis(1000));
+        let mut t2 = fake_now.now();
+        assert_eq!(t2, t1 + Duration::from_millis(1000));
 
-        let t2 = c_fake_now.lock().unwrap().now();
-
+        t2 = c_fake_now.now();
         assert_eq!(t2, t1 + Duration::from_millis(1000));
     }
 
     #[test]
     fn passthrough_no_active_layers() {
-        let fake_now = Arc::new(Mutex::new(FakeNow::new()));
-        let c_fake_now = fake_now.clone();
-        let mut th = LayerComposer::new(|| c_fake_now.lock().unwrap().now());
+        let fake_now = Box::new(FakeNow::new());
+        let mut th = LayerComposer::new();
+        th.nower = fake_now.clone();
+        assert_that!(&th.layers[0].active, eq(true));
+        assert_that!(&th.layers[1].active, eq(false));
 
         th.validate_single(th.ke(KC_E, Down), Some(th.ke(KC_E, Down)));
         th.validate_single(th.ke(KC_E, Up), Some(th.ke(KC_E, Up)));
@@ -323,21 +326,34 @@ mod layer_composer {
         th.validate_single(th.ke(KC_J, Down), Some(th.ke(KC_J, Down)));
         th.validate_single(th.ke(KC_J, Up), Some(th.ke(KC_J, Up)));
 
-        // if layer is toggled, releasing tap toggle key after tap toggle timeout should result in
-        // no keyboard events
+        // initial button down of a tap toggle key should not produce any characters and should not
+        // set the toggle layer to active
         th.validate_single(th.ke(KC_F, Down), None);
-        fake_now
-            .lock()
-            .unwrap()
-            .adjust_now(Duration::from_millis(1000));
-        th.validate_single(th.ke(KC_F, Up), None);
+        assert_that!(&th.layers[1].active, eq(false));
 
-        // ...unless we release tap toggle within the 180 millisecond timeout
+        // layer doesn't get set to active until both after the next Held key event after the tap
+        // toggle timeout
+        fake_now.adjust_now(Duration::from_millis(1000));
+        assert_that!(&th.layers[1].active, eq(false));
+        th.validate_single(th.ke(KC_F, Held), None);
+        assert_that!(&th.layers[1].active, eq(true));
+
+        // once layer is active, key transformation should take place based on definitions in the
+        // activated layer
+        th.validate_single(th.ke(KC_J, Down), Some(th.ke(KC_DOWN, Down)));
+        th.validate_single(th.ke(KC_J, Up), Some(th.ke(KC_DOWN, Up)));
+
+        // if layer is toggled, releasing tap toggle key after tap toggle timeout should result in
+        // no keyboard events and should result in the layer being distabled once again
+        th.validate_single(th.ke(KC_F, Up), None);
+        assert_that!(&th.layers[1].active, eq(false));
+        th.validate_single(th.ke(KC_J, Down), Some(th.ke(KC_J, Down)));
+        th.validate_single(th.ke(KC_J, Up), Some(th.ke(KC_J, Up)));
+
+        // if we release the key within the tap toggle timeout, then we should get the tapped key's
+        // usual output in sequence
         th.validate_single(th.ke(KC_F, Down), None);
-        fake_now
-            .lock()
-            .unwrap()
-            .adjust_now(Duration::from_millis(10));
+        fake_now.adjust_now(Duration::from_millis(10));
         th.validate_multiple(
             th.ke(KC_F, Up),
             vec![
@@ -345,8 +361,6 @@ mod layer_composer {
                 ControlCode::KeyboardEvent(th.ke(KC_F, Up)),
             ],
         );
-
-        //th.validate_single(th.ke(KC_F, Down), None);
     }
 
     #[test]

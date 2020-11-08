@@ -1,7 +1,6 @@
 use std::error;
 use std::fs::File;
 use std::path::PathBuf;
-use std::time::SystemTime;
 
 use async_std::prelude::FutureExt;
 use async_std::prelude::StreamExt;
@@ -65,7 +64,7 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
     let (handler_sender, mut output_receiver) = channel(1);
 
     let handler = Handler {
-        input_transformer: Box::new(LayerComposer::new(SystemTime::now)),
+        input_transformer: Box::new(LayerComposer::new()),
     };
     debug!("creating handler task");
     let handler_task = task::Builder::new()
