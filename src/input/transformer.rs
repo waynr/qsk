@@ -1,7 +1,8 @@
 use log::debug;
-use maplit::hashmap;
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
+
+use maplit::hashmap;
 
 use super::super::input::event;
 use super::super::input::event::KeyCode::*;
@@ -234,12 +235,14 @@ impl InputTransformer for LayerComposer {
 //
 #[cfg(test)]
 mod layer_composer {
-    use super::*;
+    use std::time::SystemTime;
+    use std::sync::{Arc, Mutex};
+
     use galvanic_assert::matchers::collection::*;
     use galvanic_assert::matchers::*;
     use galvanic_assert::*;
-    use std::time::SystemTime;
-    use std::sync::{Arc, Mutex};
+
+    use super::*;
 
     impl LayerComposer {
         fn ke(&self, kc: event::KeyCode, ks: event::KeyState) -> event::KeyboardEvent {
