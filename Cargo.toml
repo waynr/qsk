@@ -19,5 +19,8 @@ fern = "~0.5" # log implementation
 # logging
 log = "~0.4"
 
+# qsk
+qsk-events = { version = "0.1.0", path = "lib/qsk-events" }
+
 [dev-dependencies]
 galvanic-assert = "~0.8"

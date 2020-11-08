@@ -21,7 +21,7 @@ mod cli;
 use cli::get_clap_app;
 
 mod input;
-use input::event::KeyboardEvent;
+use qsk_events::KeyboardEvent;
 use input::transformer::ControlCode;
 use input::transformer::InputTransformer;
 use input::transformer::LayerComposer;

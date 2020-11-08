@@ -571,6 +571,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "qsk-events"
+version = "0.1.0"
+
+[[package]]
 name = "quantum-soft-keyboard"
 version = "0.1.0"
 dependencies = [
@@ -581,6 +585,7 @@ dependencies = [
  "galvanic-assert",
  "log",
  "maplit",
+ "qsk-events",
  "thiserror",
 ]
 

@@ -15,7 +15,7 @@ use log::error;
 mod error;
 use error::Result;
 
-use super::super::input::event;
+use qsk_events as event;
 
 pub struct Device {
     inner: Arc<Mutex<evdev_rs::Device>>,

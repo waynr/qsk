@@ -4,9 +4,9 @@ use std::time::{Duration, SystemTime};
 
 use maplit::hashmap;
 
-use super::super::input::event;
-use super::super::input::event::KeyCode::*;
-use super::super::input::event::KeyState::*;
+use qsk_events::KeyCode::*;
+use qsk_events::KeyState::*;
+use qsk_events as event;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ControlCode {
