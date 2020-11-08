@@ -135,7 +135,7 @@ impl LayerComposer {
 
         LayerComposer {
             base: Box::new(Passthrough {}),
-            layers: layers,
+            layers,
             timers: HashMap::new(),
             nower: Box::new(RealNower{}),
         }
