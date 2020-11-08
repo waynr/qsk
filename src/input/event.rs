@@ -467,3 +467,11 @@ pub enum KeyCode {
     KC_MAX = 767,
     NotImplemented = 768,
 }
+
+pub trait InputEventSource {
+    fn next_event(&self) -> Result<KeyboardEvent, Box<dyn std::error::Error>>;
+}
+
+pub trait InputEventSink {
+    fn send_event(&self, e: &KeyboardEvent) -> Result<(), Box<dyn std::error::Error>>;
+}
