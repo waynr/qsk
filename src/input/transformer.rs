@@ -1,7 +1,6 @@
 use log::debug;
 use maplit::hashmap;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime};
 
 use super::super::input::event;
@@ -175,8 +174,6 @@ impl LayerComposer {
         let mut output: Vec<ControlCode> = Vec::new();
         for cc in ccs {
             match cc {
-                // TODO: implement tap toggle timing calculation to differentiate between a tap and
-                // a toggle.
                 ControlCode::TapToggle(layer, key) => match (e.state, self.timers.get(&key)) {
                     (Down, None) => {
                         self.timers.insert(key, self.now());
@@ -242,6 +239,7 @@ mod layer_composer {
     use galvanic_assert::matchers::*;
     use galvanic_assert::*;
     use std::time::SystemTime;
+    use std::sync::{Arc, Mutex};
 
     impl LayerComposer {
         fn ke(&self, kc: event::KeyCode, ks: event::KeyState) -> event::KeyboardEvent {
