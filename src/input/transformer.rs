@@ -325,6 +325,15 @@ mod layer_composer {
 
         th.validate_single(th.ke(KC_J, Down), Some(th.ke(KC_J, Down)));
         th.validate_single(th.ke(KC_J, Up), Some(th.ke(KC_J, Up)));
+    }
+
+    #[test]
+    fn tap_toggle_toggle() {
+        let fake_now = Box::new(FakeNow::new());
+        let mut th = LayerComposer::new();
+        th.nower = fake_now.clone();
+        assert_that!(&th.layers[0].active, eq(true));
+        assert_that!(&th.layers[1].active, eq(false));
 
         // initial button down of a tap toggle key should not produce any characters and should not
         // set the toggle layer to active
@@ -350,6 +359,16 @@ mod layer_composer {
         th.validate_single(th.ke(KC_J, Down), Some(th.ke(KC_J, Down)));
         th.validate_single(th.ke(KC_J, Up), Some(th.ke(KC_J, Up)));
 
+    }
+
+    #[test]
+    fn tap_toggle_tap() {
+        let fake_now = Box::new(FakeNow::new());
+        let mut th = LayerComposer::new();
+        th.nower = fake_now.clone();
+        assert_that!(&th.layers[0].active, eq(true));
+        assert_that!(&th.layers[1].active, eq(false));
+
         // if we release the key within the tap toggle timeout, then we should get the tapped key's
         // usual output in sequence
         th.validate_single(th.ke(KC_F, Down), None);
@@ -362,7 +381,4 @@ mod layer_composer {
             ],
         );
     }
-
-    #[test]
-    fn toggle() {}
 }
