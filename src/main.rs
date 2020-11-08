@@ -20,11 +20,10 @@ use device::linux::Device;
 mod cli;
 use cli::get_clap_app;
 
-mod input;
 use qsk_events::KeyboardEvent;
-use input::transformer::ControlCode;
-use input::transformer::InputTransformer;
-use input::transformer::LayerComposer;
+use qsk_layers::ControlCode;
+use qsk_layers::InputTransformer;
+use qsk_layers::LayerComposer;
 
 struct Handler {
     input_transformer: Box<dyn InputTransformer + Send>,
