@@ -565,6 +565,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "qsk-engine"
+version = "0.1.0"
+dependencies = [
+ "async-std",
+ "log",
+ "qsk-events",
+ "qsk-layers",
+]
+
+[[package]]
 name = "qsk-events"
 version = "0.1.0"
 
@@ -587,6 +597,7 @@ dependencies = [
  "fern",
  "log",
  "maplit",
+ "qsk-engine",
  "qsk-events",
  "qsk-layers",
  "thiserror",

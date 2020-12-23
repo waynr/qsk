@@ -22,3 +22,4 @@ log = "~0.4"
 # qsk
 qsk-events = { version = "0.1.0", path = "lib/qsk-events" }
 qsk-layers = { version = "0.1.0", path = "lib/qsk-layers" }
+qsk-engine = { version = "0.1.0", path = "lib/qsk-engine" }

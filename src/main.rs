@@ -5,8 +5,6 @@ use std::path::PathBuf;
 use async_std::prelude::FutureExt;
 use async_std::prelude::StreamExt;
 use async_std::sync::channel;
-use async_std::sync::Receiver;
-use async_std::sync::Sender;
 use async_std::task;
 use clap::value_t;
 use evdev_rs;
@@ -20,31 +18,9 @@ use device::linux::Device;
 mod cli;
 use cli::get_clap_app;
 
-use qsk_events::KeyboardEvent;
-use qsk_layers::ControlCode;
-use qsk_layers::InputTransformer;
 use qsk_layers::LayerComposer;
+use qsk_engine::QSKEngine;
 
-struct Handler {
-    input_transformer: Box<dyn InputTransformer + Send>,
-}
-
-impl Handler {
-    async fn handle(mut self, mut r: Receiver<KeyboardEvent>, s: Sender<KeyboardEvent>) {
-        while let Some(e) = r.next().await {
-            debug!("received KeyboardEvent from input task");
-            if let Some(e_vec) = self.input_transformer.transform(e) {
-                for cc in e_vec.iter() {
-                    match cc {
-                        ControlCode::KeyboardEvent(v) => s.send(v.clone()).await,
-                        ControlCode::Exit => return,
-                        _ => continue,
-                    }
-                }
-            }
-        }
-    }
-}
 
 async fn doit() -> Result<(), Box<dyn error::Error>> {
     let matches = get_clap_app()?;
@@ -62,9 +38,7 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
     let (input_sender, handler_receiver) = channel(1);
     let (handler_sender, mut output_receiver) = channel(1);
 
-    let handler = Handler {
-        input_transformer: Box::new(LayerComposer::new()),
-    };
+    let handler = QSKEngine::new(Box::new(LayerComposer::new()));
     debug!("creating handler task");
     let handler_task = task::Builder::new()
         .name("handler".to_string())
