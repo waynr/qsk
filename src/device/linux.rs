@@ -1,12 +1,15 @@
 use std::convert::TryFrom;
 use std::sync::Arc;
+use std::fs::File;
 use std::sync::Mutex;
+use std::path::PathBuf;
 use std::time::Duration;
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
 
 use evdev_rs;
 use evdev_rs::enums;
+use evdev_rs::GrabMode;
 use evdev_rs::InputEvent;
 use evdev_rs::TimeVal;
 use log::error;
@@ -24,13 +27,17 @@ pub struct Device {
 unsafe impl Send for Device {}
 
 impl Device {
-    pub fn new(device: evdev_rs::Device) -> Device {
-        Device {
-            inner: Arc::new(Mutex::new(device)),
-        }
+    pub fn from_path(path: PathBuf) -> Result<Device> {
+        let f = File::open(path)?;
+        let mut d = evdev_rs::Device::new().unwrap();
+        d.set_fd(f)?;
+        d.grab(GrabMode::Grab)?;
+        Ok(Device {
+            inner: Arc::new(Mutex::new(d)),
+        })
     }
 
-    pub fn next_event(&self, flags: evdev_rs::ReadFlag) -> Result<event::KeyboardEvent> {
+    pub fn next_event(&self) -> Result<event::KeyboardEvent> {
         let guard = match self.inner.lock() {
             Ok(a) => a,
             Err(p_err) => {
@@ -39,7 +46,7 @@ impl Device {
                 g
             }
         };
-        let ev = guard.next_event(flags)?;
+        let ev = guard.next_event(evdev_rs::ReadFlag::NORMAL | evdev_rs::ReadFlag::BLOCKING)?;
         Ok(ie_into_ke(ev.1))
     }
 

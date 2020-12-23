@@ -1,5 +1,4 @@
 use std::error;
-use std::fs::File;
 use std::path::PathBuf;
 
 use async_std::prelude::FutureExt;
@@ -7,8 +6,6 @@ use async_std::prelude::StreamExt;
 use async_std::sync::channel;
 use async_std::task;
 use clap::value_t;
-use evdev_rs;
-use evdev_rs::GrabMode;
 use log::debug;
 use log::error;
 
@@ -25,14 +22,9 @@ use qsk_engine::QSKEngine;
 async fn doit() -> Result<(), Box<dyn error::Error>> {
     let matches = get_clap_app()?;
     let input_events_file = value_t!(matches, "device-file", PathBuf)?;
-    let f = File::open(input_events_file)?;
 
     std::thread::sleep(std::time::Duration::from_millis(1000));
-    let mut d = evdev_rs::Device::new().unwrap();
-    d.set_fd(f)?;
-    d.grab(GrabMode::Grab)?;
-
-    let myd = Device::new(d);
+    let myd = Device::from_path(input_events_file)?;
     let ui = myd.new_uinput_device()?;
 
     let (input_sender, handler_receiver) = channel(1);
@@ -49,7 +41,7 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
         .name("input".to_string())
         .spawn(async move {
             loop {
-                let t = myd.next_event(evdev_rs::ReadFlag::NORMAL | evdev_rs::ReadFlag::BLOCKING);
+                let t = myd.next_event();
                 debug!("received KeyboardEvent from keyboard");
                 match t {
                     Ok(a) => input_sender.send(a).await,
