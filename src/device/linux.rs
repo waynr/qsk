@@ -37,19 +37,6 @@ impl Device {
         })
     }
 
-    pub fn next_event(&self) -> Result<event::KeyboardEvent> {
-        let guard = match self.inner.lock() {
-            Ok(a) => a,
-            Err(p_err) => {
-                let g = p_err.into_inner();
-                error!("recovered Device");
-                g
-            }
-        };
-        let ev = guard.next_event(evdev_rs::ReadFlag::NORMAL | evdev_rs::ReadFlag::BLOCKING)?;
-        Ok(ie_into_ke(ev.1))
-    }
-
     pub fn new_uinput_device(&self) -> Result<UInputDevice> {
         let guard = match self.inner.lock() {
             Ok(a) => a,
@@ -63,6 +50,23 @@ impl Device {
         Ok(UInputDevice {
             inner: Arc::new(Mutex::new(d)),
         })
+    }
+}
+
+impl event::InputEventSource for Device {
+    fn recv(&self) -> std::result::Result<event::KeyboardEvent, Box<dyn std::error::Error + Send>> {
+        let guard = match self.inner.lock() {
+            Ok(a) => a,
+            Err(p_err) => {
+                let g = p_err.into_inner();
+                error!("recovered Device");
+                g
+            }
+        };
+        match guard.next_event(evdev_rs::ReadFlag::NORMAL | evdev_rs::ReadFlag::BLOCKING) {
+            Ok(ev) => Ok(ie_into_ke(ev.1)),
+            Err(e) => Err(Box::new(e)),
+        }
     }
 }
 

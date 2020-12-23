@@ -17,6 +17,7 @@ use cli::get_clap_app;
 
 use qsk_layers::LayerComposer;
 use qsk_engine::QSKEngine;
+use qsk_events::InputEventSource;
 
 
 async fn doit() -> Result<(), Box<dyn error::Error>> {
@@ -41,7 +42,7 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
         .name("input".to_string())
         .spawn(async move {
             loop {
-                let t = myd.next_event();
+                let t = myd.recv();
                 debug!("received KeyboardEvent from keyboard");
                 match t {
                     Ok(a) => input_sender.send(a).await,
