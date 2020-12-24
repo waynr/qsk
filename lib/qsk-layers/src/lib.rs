@@ -66,7 +66,7 @@ trait Nower {
     fn now(&self) -> SystemTime;
 }
 
-pub struct RealNower {}
+struct RealNower {}
 
 impl Nower for RealNower {
     fn now(&self) -> SystemTime {
