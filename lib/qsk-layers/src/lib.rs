@@ -296,6 +296,44 @@ mod layer_composer {
         }
     }
 
+    fn test_layer_composer() -> LayerComposer {
+        let mut layers = Vec::with_capacity(8);
+
+        layers.insert(
+            0,
+            Layer {
+                active: true,
+                map: hashmap!(
+                    KC_F => tap_toggle(LAYERS::Navigation, KC_F)
+                ),
+            },
+        );
+
+        layers.insert(
+            1,
+            Layer {
+                active: false,
+                map: hashmap!(
+                    KC_Y => key(KC_HOME),
+                    KC_U => key(KC_PAGEDOWN),
+                    KC_I => key(KC_PAGEUP),
+                    KC_O => key(KC_END),
+                    KC_H => key(KC_LEFT),
+                    KC_J => key(KC_DOWN),
+                    KC_K => key(KC_UP),
+                    KC_SEMICOLON => key(KC_RIGHT),
+                ),
+            },
+        );
+
+        LayerComposer {
+            base: Box::new(Passthrough {}),
+            layers,
+            timers: HashMap::new(),
+            nower: Box::new(RealNower{}),
+        }
+    }
+
     #[test]
     fn fake_now() {
         let fake_now = Box::new(FakeNow::new());
@@ -313,7 +351,7 @@ mod layer_composer {
     #[test]
     fn passthrough_no_active_layers() {
         let fake_now = Box::new(FakeNow::new());
-        let mut th = LayerComposer::new();
+        let mut th = test_layer_composer();
         th.nower = fake_now.clone();
         assert_that!(&th.layers[0].active, eq(true));
         assert_that!(&th.layers[1].active, eq(false));
@@ -331,7 +369,7 @@ mod layer_composer {
     #[test]
     fn tap_toggle_toggle() {
         let fake_now = Box::new(FakeNow::new());
-        let mut th = LayerComposer::new();
+        let mut th = test_layer_composer();
         th.nower = fake_now.clone();
         assert_that!(&th.layers[0].active, eq(true));
         assert_that!(&th.layers[1].active, eq(false));
@@ -354,7 +392,7 @@ mod layer_composer {
         th.validate_single(th.ke(KC_J, Up), Some(th.ke(KC_DOWN, Up)));
 
         // if layer is toggled, releasing tap toggle key after tap toggle timeout should result in
-        // no keyboard events and should result in the layer being distabled once again
+        // no keyboard events and should result in the layer being disabled once again
         th.validate_single(th.ke(KC_F, Up), None);
         assert_that!(&th.layers[1].active, eq(false));
         th.validate_single(th.ke(KC_J, Down), Some(th.ke(KC_J, Down)));
@@ -365,7 +403,7 @@ mod layer_composer {
     #[test]
     fn tap_toggle_tap() {
         let fake_now = Box::new(FakeNow::new());
-        let mut th = LayerComposer::new();
+        let mut th = test_layer_composer();
         th.nower = fake_now.clone();
         assert_that!(&th.layers[0].active, eq(true));
         assert_that!(&th.layers[1].active, eq(false));
