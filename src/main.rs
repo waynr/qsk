@@ -21,8 +21,8 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
     let myd = Device::from_path(input_events_file)?;
     let ui = myd.new_uinput_device()?;
 
-    let handler = QSKEngine::new(Box::new(LayerComposer::new()));
-    handler.run(Box::new(myd), Box::new(ui)).await?;
+    let engine = QSKEngine::new(Box::new(LayerComposer::new()));
+    engine.run(Box::new(myd), Box::new(ui)).await?;
     Ok(())
 }
 
