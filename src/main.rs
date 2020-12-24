@@ -24,9 +24,9 @@ enum LAYERS {
     Navigation = 1,
 }
 
-impl LAYERS {
-    fn to_usize(self) -> usize {
-        self as usize
+impl From<LAYERS> for usize {
+    fn from(layer: LAYERS) -> usize {
+        layer as usize
     }
 }
 
@@ -39,16 +39,16 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
 
     let mut layers = Vec::with_capacity(8);
     layers.insert(
-        LAYERS::HomerowCodeRight.to_usize(),
+        LAYERS::HomerowCodeRight.into(),
         Layer::from_hashmap(
             hashmap!(
-                KC_F => tap_toggle(LAYERS::Navigation.to_usize(), KC_F)
+                KC_F => tap_toggle(LAYERS::Navigation.into(), KC_F)
             ),
             true,
         ),
     );
     layers.insert(
-        LAYERS::Navigation.to_usize(),
+        LAYERS::Navigation.into(),
         Layer::from_hashmap(
             hashmap!(
                 KC_Y => key(KC_HOME),
