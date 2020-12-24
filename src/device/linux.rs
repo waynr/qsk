@@ -52,7 +52,7 @@ impl Device {
     }
 }
 
-impl event::InputEventSource for Device {
+impl event::KeyboardEventSource for Device {
     fn recv(&self) -> std::result::Result<event::KeyboardEvent, Box<dyn std::error::Error + Send>> {
         let guard = match self.inner.lock() {
             Ok(a) => a,
@@ -75,7 +75,7 @@ pub struct UInputDevice {
 
 unsafe impl Send for UInputDevice {}
 
-impl event::InputEventSink for UInputDevice {
+impl event::KeyboardEventSink for UInputDevice {
     fn send(&self, e: event::KeyboardEvent) -> std::result::Result<(), Box<dyn std::error::Error + Send>> {
         let guard = match self.inner.lock() {
             Ok(a) => a,
