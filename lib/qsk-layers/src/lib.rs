@@ -2,9 +2,9 @@ use log::debug;
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
+use qsk_events as event;
 use qsk_events::KeyCode::*;
 use qsk_events::KeyState::*;
-use qsk_events as event;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ControlCode {
@@ -39,10 +39,7 @@ pub struct Layer {
 
 impl Layer {
     pub fn from_hashmap(map: HashMap<event::KeyCode, Vec<ControlCode>>, active: bool) -> Layer {
-        Layer{
-            map,
-            active,
-        }
+        Layer { map, active }
     }
 
     fn transform(&mut self, e: event::KeyboardEvent) -> Option<Vec<ControlCode>> {
@@ -95,14 +92,13 @@ pub fn tap_toggle(layer: usize, kc: event::KeyCode) -> Vec<ControlCode> {
     vec![ControlCode::TapToggle(layer, kc)]
 }
 
-
 impl LayerComposer {
     pub fn from_layers(layers: Vec<Layer>) -> LayerComposer {
-        LayerComposer{
+        LayerComposer {
             base: Box::new(Passthrough {}),
             layers,
             timers: HashMap::new(),
-            nower: Box::new(RealNower{}),
+            nower: Box::new(RealNower {}),
         }
     }
 
@@ -112,7 +108,7 @@ impl LayerComposer {
 
     fn duration_since(&self, t: SystemTime) -> Duration {
         match self.now().duration_since(t) {
-            Ok(d) =>  d,
+            Ok(d) => d,
             Err(_) => Duration::new(0, 0),
         }
     }
@@ -200,8 +196,8 @@ impl InputTransformer for LayerComposer {
 //
 #[cfg(test)]
 mod layer_composer {
-    use std::time::SystemTime;
     use std::sync::{Arc, Mutex};
+    use std::time::SystemTime;
 
     use galvanic_assert::matchers::collection::*;
     use galvanic_assert::matchers::*;
@@ -295,7 +291,7 @@ mod layer_composer {
             base: Box::new(Passthrough {}),
             layers,
             timers: HashMap::new(),
-            nower: Box::new(RealNower{}),
+            nower: Box::new(RealNower {}),
         }
     }
 

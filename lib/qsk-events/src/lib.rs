@@ -468,10 +468,10 @@ pub enum KeyCode {
     NotImplemented = 768,
 }
 
-pub trait KeyboardEventSource : Send {
+pub trait KeyboardEventSource: Send {
     fn recv(&self) -> std::result::Result<KeyboardEvent, Box<dyn std::error::Error + Send>>;
 }
 
-pub trait KeyboardEventSink : Send {
+pub trait KeyboardEventSink: Send {
     fn send(&self, e: KeyboardEvent) -> std::result::Result<(), Box<dyn std::error::Error + Send>>;
 }

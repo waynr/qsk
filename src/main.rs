@@ -11,12 +11,12 @@ use device::linux::Device;
 mod cli;
 use cli::get_clap_app;
 
-use qsk_layers::LayerComposer;
-use qsk_layers::Layer;
-use qsk_layers::key;
-use qsk_layers::tap_toggle;
 use qsk_engine::QSKEngine;
 use qsk_events::KeyCode::*;
+use qsk_layers::key;
+use qsk_layers::tap_toggle;
+use qsk_layers::Layer;
+use qsk_layers::LayerComposer;
 
 #[derive(Clone, Debug, PartialEq, Copy)]
 enum LAYERS {

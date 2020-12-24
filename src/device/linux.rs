@@ -1,8 +1,8 @@
 use std::convert::TryFrom;
-use std::sync::Arc;
 use std::fs::File;
-use std::sync::Mutex;
 use std::path::PathBuf;
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::time::Duration;
 use std::time::UNIX_EPOCH;
 
@@ -76,7 +76,10 @@ pub struct UInputDevice {
 unsafe impl Send for UInputDevice {}
 
 impl event::KeyboardEventSink for UInputDevice {
-    fn send(&self, e: event::KeyboardEvent) -> std::result::Result<(), Box<dyn std::error::Error + Send>> {
+    fn send(
+        &self,
+        e: event::KeyboardEvent,
+    ) -> std::result::Result<(), Box<dyn std::error::Error + Send>> {
         let guard = match self.inner.lock() {
             Ok(a) => a,
             Err(p_err) => {

@@ -1,15 +1,15 @@
+use async_std::prelude::FutureExt;
 use async_std::prelude::StreamExt;
+use async_std::sync::channel;
 use async_std::sync::Receiver;
 use async_std::sync::Sender;
-use async_std::prelude::FutureExt;
-use async_std::sync::channel;
 use async_std::task;
 use log::debug;
 use log::error;
 
 use qsk_events::KeyboardEvent;
-use qsk_events::KeyboardEventSource;
 use qsk_events::KeyboardEventSink;
+use qsk_events::KeyboardEventSource;
 use qsk_layers::ControlCode;
 use qsk_layers::InputTransformer;
 
@@ -19,7 +19,7 @@ pub struct QSKEngine {
 
 impl QSKEngine {
     pub fn new(it: Box<dyn InputTransformer + Send>) -> Self {
-        QSKEngine{
+        QSKEngine {
             input_transformer: it,
         }
     }
@@ -39,7 +39,11 @@ impl QSKEngine {
         }
     }
 
-    pub async fn run(self, src: Box<dyn KeyboardEventSource>, snk: Box<dyn KeyboardEventSink>) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    pub async fn run(
+        self,
+        src: Box<dyn KeyboardEventSource>,
+        snk: Box<dyn KeyboardEventSink>,
+    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
         let (input_sender, handler_receiver) = channel(1);
         let (handler_sender, mut output_receiver) = channel(1);
 
@@ -89,4 +93,3 @@ mod tests {
         assert_eq!(2 + 2, 4);
     }
 }
-
