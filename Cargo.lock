@@ -590,7 +590,6 @@ version = "0.1.0"
 dependencies = [
  "galvanic-assert",
  "log",
- "maplit",
  "qsk-events",
 ]
 

@@ -2,8 +2,6 @@ use log::debug;
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
-use maplit::hashmap;
-
 use qsk_events::KeyCode::*;
 use qsk_events::KeyState::*;
 use qsk_events as event;
@@ -34,12 +32,19 @@ pub trait InputTransformer {
     fn transform(&mut self, e: event::KeyboardEvent) -> Option<Vec<ControlCode>>;
 }
 
-struct Layer {
+pub struct Layer {
     map: HashMap<event::KeyCode, Vec<ControlCode>>,
     active: bool,
 }
 
 impl Layer {
+    pub fn from_hashmap(map: HashMap<event::KeyCode, Vec<ControlCode>>, active: bool) -> Layer {
+        Layer{
+            map,
+            active,
+        }
+    }
+
     fn transform(&mut self, e: event::KeyboardEvent) -> Option<Vec<ControlCode>> {
         match (self.map.get(&e.code), self.active) {
             (Some(ccs), true) => {
@@ -82,58 +87,18 @@ pub struct LayerComposer {
     nower: Box<dyn Nower + Send>,
 }
 
-#[derive(Clone, Debug, PartialEq, Copy)]
-enum LAYERS {
-    HomerowCodeRight = 0,
-    Navigation = 1,
-}
-
-impl LAYERS {
-    fn to_usize(self) -> usize {
-        self as usize
-    }
-}
-
-fn key(k: event::KeyCode) -> Vec<ControlCode> {
+pub fn key(k: event::KeyCode) -> Vec<ControlCode> {
     vec![ControlCode::KeyMap(k)]
 }
 
-fn tap_toggle(layer: LAYERS, kc: event::KeyCode) -> Vec<ControlCode> {
-    vec![ControlCode::TapToggle(layer.to_usize(), kc)]
+pub fn tap_toggle(layer: usize, kc: event::KeyCode) -> Vec<ControlCode> {
+    vec![ControlCode::TapToggle(layer, kc)]
 }
 
+
 impl LayerComposer {
-    pub fn new() -> LayerComposer {
-        let mut layers = Vec::with_capacity(8);
-
-        layers.insert(
-            LAYERS::HomerowCodeRight.to_usize(),
-            Layer {
-                active: true,
-                map: hashmap!(
-                    KC_F => tap_toggle(LAYERS::Navigation, KC_F)
-                ),
-            },
-        );
-
-        layers.insert(
-            LAYERS::Navigation.to_usize(),
-            Layer {
-                active: false,
-                map: hashmap!(
-                    KC_Y => key(KC_HOME),
-                    KC_U => key(KC_PAGEDOWN),
-                    KC_I => key(KC_PAGEUP),
-                    KC_O => key(KC_END),
-                    KC_H => key(KC_LEFT),
-                    KC_J => key(KC_DOWN),
-                    KC_K => key(KC_UP),
-                    KC_SEMICOLON => key(KC_RIGHT),
-                ),
-            },
-        );
-
-        LayerComposer {
+    pub fn from_layers(layers: Vec<Layer>) -> LayerComposer {
+        LayerComposer{
             base: Box::new(Passthrough {}),
             layers,
             timers: HashMap::new(),
