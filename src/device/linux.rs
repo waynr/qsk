@@ -4,7 +4,6 @@ use std::fs::File;
 use std::sync::Mutex;
 use std::path::PathBuf;
 use std::time::Duration;
-use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
 
 use evdev_rs;
@@ -76,8 +75,8 @@ pub struct UInputDevice {
 
 unsafe impl Send for UInputDevice {}
 
-impl UInputDevice {
-    pub fn send_key(&self, e: event::KeyboardEvent) -> Result<()> {
+impl event::InputEventSink for UInputDevice {
+    fn send(&self, e: event::KeyboardEvent) -> std::result::Result<(), Box<dyn std::error::Error + Send>> {
         let guard = match self.inner.lock() {
             Ok(a) => a,
             Err(p_err) => {
@@ -88,14 +87,24 @@ impl UInputDevice {
         };
 
         if let Some(ie) = ke_into_ie(e) {
-            guard.write_event(&ie)?;
-            let t: SystemTime = e.time.into();
-            guard.write_event(&InputEvent {
-                time: TimeVal::try_from(t)?,
+            match guard.write_event(&ie) {
+                Ok(_) => (),
+                Err(e) => return Err(Box::new(e)),
+            };
+            let t: TimeVal;
+            match TimeVal::try_from(e.time) {
+                Ok(tv) => t = tv,
+                Err(e) => return Err(Box::new(e)),
+            }
+            match guard.write_event(&InputEvent {
+                time: t,
                 event_type: enums::EventType::EV_SYN,
                 event_code: enums::EventCode::EV_SYN(enums::EV_SYN::SYN_REPORT),
                 value: 0,
-            })?;
+            }) {
+                Ok(_) => return Ok(()),
+                Err(e) => return Err(Box::new(e)),
+            }
         }
         Ok(())
     }

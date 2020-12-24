@@ -473,5 +473,5 @@ pub trait InputEventSource : Send {
 }
 
 pub trait InputEventSink : Send {
-    fn send(&self, e: &KeyboardEvent) -> std::result::Result<(), Box<dyn std::error::Error + Send>>;
+    fn send(&self, e: KeyboardEvent) -> std::result::Result<(), Box<dyn std::error::Error + Send>>;
 }

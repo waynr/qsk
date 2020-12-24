@@ -18,6 +18,7 @@ use cli::get_clap_app;
 use qsk_layers::LayerComposer;
 use qsk_engine::QSKEngine;
 use qsk_events::InputEventSource;
+use qsk_events::InputEventSink;
 
 
 async fn doit() -> Result<(), Box<dyn error::Error>> {
@@ -58,7 +59,7 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
         .spawn(async move {
             while let Some(e) = output_receiver.next().await {
                 debug!("received KeyboardEvent from handler");
-                match ui.send_key(e) {
+                match ui.send(e) {
                     Ok(_) => (),
                     Err(err) => error!("error writing to keyboard device: {:?}", err),
                 }
