@@ -58,7 +58,7 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
                 KC_K => key(KC_UP),
                 KC_SEMICOLON => key(KC_RIGHT),
             ),
-            true,
+            false,
         ),
     );
 
