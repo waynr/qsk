@@ -5,12 +5,10 @@ use async_std::task;
 use clap::value_t;
 use maplit::hashmap;
 
-mod device;
-use device::linux::Device;
-
 mod cli;
 use cli::get_clap_app;
 
+use qsk_device::linux::Device;
 use qsk_engine::QSKEngine;
 use qsk_events::KeyCode::*;
 use qsk_layers::key;

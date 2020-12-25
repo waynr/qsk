@@ -11,12 +11,11 @@ members = [
   "lib/qsk-layers",
   "lib/qsk-events",
   "lib/qsk-engine",
+  "lib/qsk-device",
 ]
 
 [dependencies]
-evdev-rs = "0.4"
 async-std = { version = "~1.5", features = ["unstable"] }
-thiserror = "1.0"
 maplit = "1.0"
 
 # cli
@@ -30,3 +29,4 @@ log = "~0.4"
 qsk-events = { version = "0.1.0", path = "lib/qsk-events" }
 qsk-layers = { version = "0.1.0", path = "lib/qsk-layers" }
 qsk-engine = { version = "0.1.0", path = "lib/qsk-engine" }
+qsk-device = { version = "0.1.0", path = "lib/qsk-device" }

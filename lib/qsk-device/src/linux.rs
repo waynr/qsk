@@ -13,9 +13,7 @@ use evdev_rs::InputEvent;
 use evdev_rs::TimeVal;
 use log::error;
 
-#[path = "../error.rs"]
-mod error;
-use error::Result;
+use crate::errors::Result;
 
 use qsk_events as event;
 
