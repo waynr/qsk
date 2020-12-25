@@ -358,7 +358,6 @@ mod layer_composer {
         assert_that!(&th.layers[1].active, eq(false));
         th.validate_single(th.ke(KC_J, Down), Some(th.ke(KC_J, Down)));
         th.validate_single(th.ke(KC_J, Up), Some(th.ke(KC_J, Up)));
-
     }
 
     #[test]
