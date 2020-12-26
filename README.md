@@ -35,6 +35,15 @@ Run:
 
 # Differences from QMK
 
+Assuming you are familiar with QMK, you might be interested to know how this
+project differs from it.
+
+If you're not familiar with QMK, then the TL;DR is that it is software that you
+can use to customize the behavior of supported keyboards to dynamically alter
+the behavior of keys according. If you would like to know more, please check
+out the [QMK documentation site](https://docs.qmk.fm/#/) but be warned that it
+is a somewhat deep rabbithole.
+
 ## Target Runtime
 
 QMK compiles to firmware that must be loaded onto a given target keyboard that
