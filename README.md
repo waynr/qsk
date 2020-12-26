@@ -18,6 +18,21 @@ with your 1990s era department store desktop computer.
 This feature set is still fairly small relative to QMK's quite prolific feature
 set. Features are implemented on an as-needed basis -- contributions welcome!
 
+# Usage
+
+Build:
+
+```
+git clone https://github.com/waynr/qsk
+cd qsk
+cargo build
+```
+
+Run:
+```
+./target/debug/quantum-soft-keyboard -v /dev/input/by-path/<target-keyboard>
+```
+
 # Differences from QMK
 
 ## Target Runtime
