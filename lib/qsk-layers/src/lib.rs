@@ -195,10 +195,12 @@ impl InputTransformer for LayerComposer {
 // test tap toggle timing
 //
 #[cfg(test)]
+
 mod layer_composer {
     use std::sync::{Arc, Mutex};
     use std::time::SystemTime;
 
+    use maplit::hashmap;
     use galvanic_assert::matchers::collection::*;
     use galvanic_assert::matchers::*;
     use galvanic_assert::*;
@@ -257,21 +259,33 @@ mod layer_composer {
         }
     }
 
+    #[derive(Clone, Debug, PartialEq, Copy)]
+    enum LAYERS {
+        HomerowCodeRight = 0,
+        Navigation = 1,
+    }
+
+    impl From<LAYERS> for usize {
+        fn from(layer: LAYERS) -> usize {
+            layer as usize
+        }
+    }
+
     fn test_layer_composer() -> LayerComposer {
         let mut layers = Vec::with_capacity(8);
 
         layers.insert(
-            0,
+            LAYERS::HomerowCodeRight.into(),
             Layer {
                 active: true,
                 map: hashmap!(
-                    KC_F => tap_toggle(LAYERS::Navigation, KC_F)
+                    KC_F => tap_toggle(LAYERS::Navigation.into(), KC_F)
                 ),
             },
         );
 
         layers.insert(
-            1,
+            LAYERS::Navigation.into(),
             Layer {
                 active: false,
                 map: hashmap!(
