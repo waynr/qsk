@@ -6,7 +6,7 @@ use fern;
 use log;
 
 pub fn get_clap_app<'a>() -> Result<ArgMatches<'a>, Box<dyn std::error::Error>> {
-    let matches = App::new("personal financial analysis tool")
+    let matches = App::new("quantom soft keyboard")
         .arg(
             Arg::with_name("device-file")
                 .help("Input events file")
@@ -24,7 +24,7 @@ pub fn get_clap_app<'a>() -> Result<ArgMatches<'a>, Box<dyn std::error::Error>> 
         ))
         .version("0.0")
         .author("Wayne Warren <wayne.warren.s@gmail.com>")
-        .about("Extrapolative modeling, comparative analysis, and planning for personal finances")
+        .about("The keyboard remapping software you never knew you wanted.")
         .to_owned()
         .get_matches();
 
