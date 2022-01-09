@@ -5,21 +5,21 @@ use clap::{App, Arg, ArgMatches};
 use fern;
 use log;
 
-pub fn get_clap_app<'a>() -> Result<ArgMatches<'a>, Box<dyn std::error::Error>> {
+pub fn get_clap_app() -> Result<ArgMatches, Box<dyn std::error::Error>> {
     let matches = App::new("quantom soft keyboard")
         .arg(
-            Arg::with_name("device-file")
+            Arg::new("device-file")
                 .help("Input events file")
                 .takes_value(true)
                 .required(true),
         )
         .arg(
-            Arg::with_name("verbose")
-                .short("v")
-                .multiple(true)
+            Arg::new("verbose")
+                .short('v')
+                .multiple_values(true)
                 .help("increases the verbosity level"),
         )
-        .arg(Arg::with_name("quiet").short("q").multiple(true).help(
+        .arg(Arg::new("quiet").short('q').multiple_values(true).help(
             "decreases the verbosity level; once suppresses warnings, twice suppresses errors.",
         ))
         .version("0.0")

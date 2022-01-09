@@ -1,8 +1,6 @@
 use std::error;
-use std::path::PathBuf;
 
 use async_std::task;
-use clap::value_t;
 use maplit::hashmap;
 
 mod cli;
@@ -30,7 +28,7 @@ impl From<LAYERS> for usize {
 
 async fn doit() -> Result<(), Box<dyn error::Error>> {
     let matches = get_clap_app()?;
-    let input_events_file = value_t!(matches, "device-file", PathBuf)?;
+    let input_events_file = matches.value_of_t( "device-file")?;
 
     let myd = Device::from_path(input_events_file)?;
     let ui = myd.new_uinput_device()?;

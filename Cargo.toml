@@ -19,7 +19,7 @@ async-std = { version = "~1.5", features = ["unstable"] }
 maplit = "1.0"
 
 # cli
-clap = "~2.33"
+clap = "~3.0"
 fern = "~0.5" # log implementation
 
 # logging
