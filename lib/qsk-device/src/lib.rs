@@ -1,4 +1,5 @@
 pub mod linux;
+pub mod linux_evdev;
 
 #[cfg(test)]
 mod tests {
