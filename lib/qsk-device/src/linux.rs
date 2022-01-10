@@ -13,7 +13,8 @@ use evdev_rs::InputEvent;
 use evdev_rs::TimeVal;
 use log::error;
 
-use crate::errors::Result;
+use qsk_errors::Result;
+use qsk_errors::Error;
 
 use qsk_events as event;
 
@@ -51,7 +52,7 @@ impl Device {
 }
 
 impl event::KeyboardEventSource for Device {
-    fn recv(&self) -> std::result::Result<event::KeyboardEvent, Box<dyn std::error::Error + Send>> {
+    fn recv(&mut self) -> Result<event::KeyboardEvent> {
         let guard = match self.inner.lock() {
             Ok(a) => a,
             Err(p_err) => {
@@ -62,7 +63,7 @@ impl event::KeyboardEventSource for Device {
         };
         match guard.next_event(evdev_rs::ReadFlag::NORMAL | evdev_rs::ReadFlag::BLOCKING) {
             Ok(ev) => Ok(ie_into_ke(ev.1)),
-            Err(e) => Err(Box::new(e)),
+            Err(e) => Err(Error::IO(e)),
         }
     }
 }
@@ -77,7 +78,7 @@ impl event::KeyboardEventSink for UInputDevice {
     fn send(
         &self,
         e: event::KeyboardEvent,
-    ) -> std::result::Result<(), Box<dyn std::error::Error + Send>> {
+    ) -> Result<()> {
         let guard = match self.inner.lock() {
             Ok(a) => a,
             Err(p_err) => {
@@ -90,12 +91,12 @@ impl event::KeyboardEventSink for UInputDevice {
         if let Some(ie) = ke_into_ie(e) {
             match guard.write_event(&ie) {
                 Ok(_) => (),
-                Err(e) => return Err(Box::new(e)),
+                Err(e) => return Err(Error::IO(e)),
             };
             let t: TimeVal;
             match TimeVal::try_from(e.time) {
                 Ok(tv) => t = tv,
-                Err(e) => return Err(Box::new(e)),
+                Err(e) => return Err(Error::SystemTimeError(e)),
             }
             match guard.write_event(&InputEvent {
                 time: t,
@@ -104,7 +105,7 @@ impl event::KeyboardEventSink for UInputDevice {
                 value: 0,
             }) {
                 Ok(_) => return Ok(()),
-                Err(e) => return Err(Box::new(e)),
+                Err(e) => return Err(Error::IO(e)),
             }
         }
         Ok(())

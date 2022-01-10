@@ -15,3 +15,4 @@ log = "~0.4"
 
 # qsk
 qsk-events = { version = "0.1.0", path = "../qsk-events" }
+qsk-errors = { version = "0.1.0", path = "../qsk-errors" }

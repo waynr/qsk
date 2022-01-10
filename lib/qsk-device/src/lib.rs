@@ -1,4 +1,3 @@
-mod errors;
 pub mod linux;
 
 #[cfg(test)]

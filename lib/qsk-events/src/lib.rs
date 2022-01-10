@@ -1,5 +1,7 @@
 use std::time::SystemTime;
 
+use qsk_errors::Result;
+
 // KeyboardEvent is a QSK-specific struct modeled in large part after evdev_rs::InputEvent.
 // Although evdev_rs::InputEvent actually supports a large range of Linux-specific input events, we
 // focus here on keyboard events specifically since keyboard events are the primary concern of QSK
@@ -469,9 +471,9 @@ pub enum KeyCode {
 }
 
 pub trait KeyboardEventSource: Send {
-    fn recv(&self) -> std::result::Result<KeyboardEvent, Box<dyn std::error::Error + Send>>;
+    fn recv(&mut self) -> Result<KeyboardEvent>;
 }
 
 pub trait KeyboardEventSink: Send {
-    fn send(&self, e: KeyboardEvent) -> std::result::Result<(), Box<dyn std::error::Error + Send>>;
+    fn send(&self, e: KeyboardEvent) -> Result<()>;
 }
