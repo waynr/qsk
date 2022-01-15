@@ -13,6 +13,9 @@ pub enum Error {
     #[error("io error")]
     NoEvents,
 
+    #[error("unrecognized InputEvent")]
+    UnrecognizedInputEvent,
+
     #[error("time error")]
     SystemTimeError(#[from] std::time::SystemTimeError),
 }

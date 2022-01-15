@@ -12,6 +12,8 @@ evdev = { version = "~0.11", features = ["tokio"] }
 thiserror = "1.0"
 futures = "~0.3"
 
+num = "~0.3"
+
 # logging
 log = "~0.4"
 

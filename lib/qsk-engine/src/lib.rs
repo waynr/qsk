@@ -42,7 +42,7 @@ impl QSKEngine {
     pub async fn run(
         self,
         mut src: Box<dyn KeyboardEventSource>,
-        snk: Box<dyn KeyboardEventSink>,
+        mut snk: Box<dyn KeyboardEventSink>,
     ) -> std::result::Result<(), Box<dyn std::error::Error>> {
         let (input_sender, handler_receiver) = channel(1);
         let (handler_sender, mut output_receiver) = channel(1);

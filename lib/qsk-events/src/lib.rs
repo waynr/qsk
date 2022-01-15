@@ -477,5 +477,5 @@ pub trait KeyboardEventSource: Send {
 }
 
 pub trait KeyboardEventSink: Send {
-    fn send(&self, e: KeyboardEvent) -> Result<()>;
+    fn send(&mut self, e: KeyboardEvent) -> Result<()>;
 }

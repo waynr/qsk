@@ -76,7 +76,7 @@ unsafe impl Send for UInputDevice {}
 
 impl event::KeyboardEventSink for UInputDevice {
     fn send(
-        &self,
+        &mut self,
         e: event::KeyboardEvent,
     ) -> Result<()> {
         let guard = match self.inner.lock() {
