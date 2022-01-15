@@ -40,6 +40,25 @@ impl Device {
             inner: vdb.build()?,
         })
     }
+
+    pub fn list() -> Result<()> {
+        for (path, dev) in evdev::enumerate() {
+            if let Some(keys) = dev.supported_keys() {
+                let mut key_count = 0;
+                for _key in keys.iter() {
+                    //println!("  key: {:?}", key);
+                    key_count+=1;
+                }
+                if key_count > 100 {
+                    println!("{}", dev.name().unwrap_or("unknown"));
+                    println!("  key_count: {}", key_count);
+                    println!("  physical path: {}", dev.physical_path().unwrap_or("unknown"));
+                    println!("  system path: {}", path.display());
+                }
+            }
+        }
+        Ok(())
+    }
 }
 
 struct InputEvent(event::InputEvent);
