@@ -8,3 +8,6 @@ edition = "2018"
 
 [dependencies]
 qsk-errors = { version = "0.1.0", path = "../qsk-errors" }
+
+num-derive = "0.3"
+num-traits = "0.2"

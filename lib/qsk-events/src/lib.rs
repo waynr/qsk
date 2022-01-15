@@ -1,5 +1,7 @@
 use std::time::SystemTime;
 
+use num_derive::{FromPrimitive, ToPrimitive};
+
 use qsk_errors::Result;
 
 // KeyboardEvent is a QSK-specific struct modeled in large part after evdev_rs::InputEvent.
@@ -26,7 +28,7 @@ pub enum KeyState {
 // Copied and pasted from evdev-rs 0.3.1 with s/KEY_/KC_/ to align more closely with QMK naming
 // key code naming conventions.
 #[allow(non_camel_case_types)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[allow(dead_code)]
 pub enum KeyCode {
     KC_RESERVED = 0,
