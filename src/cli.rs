@@ -6,26 +6,33 @@ use fern;
 use log;
 
 pub fn get_clap_app() -> Result<ArgMatches, Box<dyn std::error::Error>> {
-    let matches = App::new("quantom soft keyboard")
+    let remap = App::new("remap")
         .arg(
             Arg::new("device-file")
                 .help("Input events file")
                 .takes_value(true)
                 .required(true),
         )
+        .about("remap the keyboard represented by the specified device file");
+
+    let list_devices = App::new("list-devices")
+        .about("list keyboard-type devices available for remapping");
+
+    let matches = App::new("quantom soft keyboard")
         .arg(
             Arg::new("verbose")
                 .short('v')
-                .multiple_values(true)
+                .multiple_occurrences(true)
                 .help("increases the verbosity level"),
         )
-        .arg(Arg::new("quiet").short('q').multiple_values(true).help(
+        .arg(Arg::new("quiet").short('q').multiple_occurrences(true).help(
             "decreases the verbosity level; once suppresses warnings, twice suppresses errors.",
         ))
         .version("0.0")
         .author("Wayne Warren <wayne.warren.s@gmail.com>")
         .about("The keyboard remapping software you never knew you wanted.")
-        .to_owned()
+        .subcommand(remap)
+        .subcommand(list_devices)
         .get_matches();
 
     let vs = matches.occurrences_of("verbose") as usize;

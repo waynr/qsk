@@ -2,6 +2,7 @@ use std::error;
 
 use async_std::task;
 use maplit::hashmap;
+use clap::ArgMatches;
 
 mod cli;
 use cli::get_clap_app;
@@ -26,8 +27,7 @@ impl From<LAYERS> for usize {
     }
 }
 
-async fn doit() -> Result<(), Box<dyn error::Error>> {
-    let matches = get_clap_app()?;
+async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
     let input_events_file = matches.value_of_t( "device-file")?;
 
     let myd = Device::from_path(input_events_file)?;
@@ -69,5 +69,12 @@ async fn doit() -> Result<(), Box<dyn error::Error>> {
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
-    task::block_on(doit())
+    let matches = get_clap_app()?;
+
+    match matches.subcommand() {
+        Some(("list-devices", _)) => Device::list()?,
+        Some(("remap", submatches)) => task::block_on(remap(submatches))?,
+        _ => (),
+    };
+    Ok(())
 }
