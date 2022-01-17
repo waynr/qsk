@@ -5,11 +5,12 @@ use async_std::sync::Receiver;
 use async_std::sync::Sender;
 use async_std::task;
 use log::debug;
+use log::trace;
 use log::error;
 
-use qsk_events::KeyboardEvent;
-use qsk_events::KeyboardEventSink;
-use qsk_events::KeyboardEventSource;
+use qsk_events::InputEvent;
+use qsk_events::InputEventSink;
+use qsk_events::InputEventSource;
 use qsk_layers::ControlCode;
 use qsk_layers::InputTransformer;
 
@@ -24,13 +25,16 @@ impl QSKEngine {
         }
     }
 
-    pub async fn handle(mut self, mut r: Receiver<KeyboardEvent>, s: Sender<KeyboardEvent>) {
+    pub async fn handle(mut self, mut r: Receiver<InputEvent>, s: Sender<InputEvent>) {
         while let Some(e) = r.next().await {
-            debug!("received KeyboardEvent from input task");
+            debug!("recv: {:?} {:?}", e.code, e.state);
             if let Some(e_vec) = self.input_transformer.transform(e) {
                 for cc in e_vec.iter() {
                     match cc {
-                        ControlCode::KeyboardEvent(v) => s.send(v.clone()).await,
+                        ControlCode::InputEvent(v) => {
+                            s.send(v.clone()).await;
+                            debug!("send: {:?} {:?}", v.code, v.state);
+                        },
                         ControlCode::Exit => return,
                         _ => continue,
                     }
@@ -41,43 +45,44 @@ impl QSKEngine {
 
     pub async fn run(
         self,
-        mut src: Box<dyn KeyboardEventSource>,
-        mut snk: Box<dyn KeyboardEventSink>,
+        mut src: Box<dyn InputEventSource>,
+        mut snk: Box<dyn InputEventSink>,
     ) -> std::result::Result<(), Box<dyn std::error::Error>> {
         let (input_sender, handler_receiver) = channel(1);
         let (handler_sender, mut output_receiver) = channel(1);
 
-        debug!("creating handler task");
+        trace!("creating handler task");
         let handler_task = task::Builder::new()
             .name("handler".to_string())
             .spawn(self.handle(handler_receiver, handler_sender))?;
 
-        debug!("creating input task");
+        trace!("creating input task");
         let input_task = task::Builder::new()
             .name("input".to_string())
             .spawn(async move {
                 loop {
                     let t = src.recv();
-                    debug!("received KeyboardEvent from keyboard");
+                    trace!("received InputEvent from keyboard");
                     match t {
-                        Ok(a) => input_sender.send(a).await,
+                        Ok(Some(a)) => input_sender.send(a).await,
+                        Ok(None) => (),
                         Err(err) => error!("error reading from keyboard device: {:?}", err),
                     }
-                    debug!("sent KeyboardEvent to handler");
+                    trace!("sent InputEvent to handler");
                 }
             })?;
 
-        debug!("creating output task");
+        trace!("creating output task");
         let output_task = task::Builder::new()
             .name("output".to_string())
             .spawn(async move {
                 while let Some(e) = output_receiver.next().await {
-                    debug!("received KeyboardEvent from handler");
+                    trace!("received InputEvent from handler");
                     match snk.send(e) {
                         Ok(_) => (),
                         Err(err) => error!("error writing to keyboard device: {:?}", err),
                     }
-                    debug!("sent InputEvent to virtual keyboard");
+                    trace!("sent InputEvent to virtual keyboard");
                 }
             })?;
 
