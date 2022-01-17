@@ -2,8 +2,9 @@ use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
 use qsk_events as event;
-use qsk_events::KeyCode::*;
-use qsk_events::KeyState::*;
+use qsk_events::{
+    EventCode, KeyCode::*, KeyState::*,
+};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ControlCode {
@@ -18,7 +19,7 @@ pub struct Passthrough {}
 impl InputTransformer for Passthrough {
     fn transform(&mut self, e: event::InputEvent) -> Option<Vec<ControlCode>> {
         match e.code {
-            KC_PAUSE => Some(vec![ControlCode::Exit]),
+           EventCode::KeyCode(KC_PAUSE) => Some(vec![ControlCode::Exit]),
             _ => {
                 Some(vec![ControlCode::InputEvent(e)])
             }
@@ -31,13 +32,17 @@ pub trait InputTransformer {
 }
 
 pub struct Layer {
-    map: HashMap<event::KeyCode, Vec<ControlCode>>,
+    map: HashMap<EventCode, Vec<ControlCode>>,
     active: bool,
 }
 
 impl Layer {
     pub fn from_hashmap(map: HashMap<event::KeyCode, Vec<ControlCode>>, active: bool) -> Layer {
-        Layer { map, active }
+        let mut new_map = HashMap::with_capacity(map.len());
+        map.iter().for_each(|(k, v)| {
+                new_map.insert(EventCode::KeyCode(*k), v.clone());
+            });
+        Layer { map: new_map, active }
     }
 
     fn transform(&mut self, e: event::InputEvent) -> Option<Vec<ControlCode>> {
@@ -48,7 +53,7 @@ impl Layer {
                     match cc {
                         ControlCode::KeyMap(kc) => {
                             let mut cloned = e.clone();
-                            cloned.code = *kc;
+                            cloned.code = EventCode::KeyCode(*kc);
                             output.push(ControlCode::InputEvent(cloned));
                         }
                         _ => output.push(cc.clone()),
@@ -115,15 +120,13 @@ impl LayerComposer {
         vec![
             ControlCode::InputEvent(event::InputEvent {
                 time: self.now(),
-                code: k,
+                code: EventCode::KeyCode(k),
                 state: Down,
-                ty: event::EventType::KEY,
             }),
             ControlCode::InputEvent(event::InputEvent {
                 time: self.now(),
-                code: k,
+                code: EventCode::KeyCode(k),
                 state: Up,
-                ty: event::EventType::KEY,
             }),
         ]
     }
