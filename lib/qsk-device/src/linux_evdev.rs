@@ -1,11 +1,13 @@
-use futures::executor::block_on;
+use std::convert::TryFrom;
 use std::path::PathBuf;
+use futures::executor::block_on;
 
 use evdev;
 use evdev::uinput;
 
 use qsk_errors::{Error, Result};
 use qsk_events as event;
+use qsk_events::{EventCode, SynCode, KeyCode};
 
 pub struct Device {
     inner: evdev::EventStream,
@@ -40,28 +42,60 @@ impl Device {
     }
 }
 
-impl event::InputEventSource for Device {
-    fn recv(&mut self) -> Result<Option<event::InputEvent>> {
-        let ev = block_on(self.inner.next_event())?;
-        if let Some(ec) = num::FromPrimitive::from_u16(ev.code()) {
-            match ev.event_type() {
-                evdev::EventType::KEY => Ok(Some(event::InputEvent {
-                    time: ev.timestamp(),
-                    code: ec,
-                    state: i32_into_ks(ev.value()),
-                    ty: event::EventType::KEY,
-                })),
-                evdev::EventType::SYNCHRONIZATION => Ok(Some(event::InputEvent {
-                    time: ev.timestamp(),
-                    code: ec,
-                    state: i32_into_ks(ev.value()),
-                    ty: event::EventType::SYN,
-                })),
-                _ => Ok(None),
-            }
-        } else {
-            Err(Error::UnrecognizedInputEvent)
+struct InputEvent(event::InputEvent);
+
+impl TryFrom<evdev::InputEvent> for InputEvent {
+    type Error = Error;
+
+    fn try_from(ev: evdev::InputEvent) -> Result<InputEvent> {
+        let ec = match ev.event_type() {
+            evdev::EventType::KEY => {
+                let kc: Option<KeyCode> = num::FromPrimitive::from_u16(ev.code() as u16);
+                match kc {
+                    Some(code) => Some(EventCode::KeyCode(code)),
+                    None => None,
+                }
+            },
+            evdev::EventType::SYNCHRONIZATION => {
+                let kc: Option<SynCode> = num::FromPrimitive::from_u16(ev.code() as u16);
+                match kc {
+                    Some(code) => Some(EventCode::SynCode(code)),
+                    None => None,
+                }
+            },
+            _ => None,
+        };
+        match ec {
+            Some(code) => Ok(InputEvent(event::InputEvent{
+                time: ev.timestamp(),
+                code,
+                state: i32_into_ks(ev.value()),
+            })),
+            None => Err(Error::UnsupportedEventType),
         }
+    }
+}
+
+impl TryFrom<InputEvent> for evdev::InputEvent {
+    type Error = Error;
+
+    fn try_from(ie: InputEvent) -> Result<evdev::InputEvent> {
+        let (ty, code) = match ie.0.code {
+            EventCode::KeyCode(c) => (evdev::EventType::SYNCHRONIZATION, c as i16),
+            EventCode::SynCode(c) => (evdev::EventType::KEY, c as i16),
+        };
+        Ok(evdev::InputEvent::new(
+            ty,
+            code as u16,
+            ie.0.state as i32,
+        ))
+    }
+}
+
+impl event::InputEventSource for Device {
+    fn recv(&mut self) -> Result<event::InputEvent> {
+        let ev = block_on(self.inner.next_event())?;
+        Ok(InputEvent::try_from(ev)?.0)
     }
 }
 
@@ -79,12 +113,9 @@ pub struct UInputDevice {
 }
 
 impl event::InputEventSink for UInputDevice {
-    fn send(&mut self, ke: event::InputEvent) -> Result<()> {
-        self.inner.emit(&[evdev::InputEvent::new(
-            evdev::EventType::KEY,
-            ke.code as u16,
-            ke.state as i32,
-        )])?;
+    fn send(&mut self, ie: event::InputEvent) -> Result<()> {
+        let evdev_ie = evdev::InputEvent::try_from(InputEvent(ie))?;
+        self.inner.emit(&[evdev_ie])?;
         Ok(())
     }
 }
