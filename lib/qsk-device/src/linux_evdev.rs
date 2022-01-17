@@ -1,11 +1,11 @@
-use std::path::PathBuf;
 use futures::executor::block_on;
+use std::path::PathBuf;
 
 use evdev;
 use evdev::uinput;
 
-use qsk_events as event;
 use qsk_errors::{Error, Result};
+use qsk_events as event;
 
 pub struct Device {
     inner: evdev::EventStream,
@@ -14,14 +14,14 @@ pub struct Device {
 impl Device {
     pub fn from_path(path: PathBuf) -> Result<Device> {
         let d = evdev::Device::open(&path)?;
-        Ok(Device{
+        Ok(Device {
             inner: d.into_event_stream()?,
         })
     }
 
     pub fn from_evdev_device(mut d: evdev::Device) -> Result<Device> {
         d.grab()?;
-        Ok(Device{
+        Ok(Device {
             inner: d.into_event_stream()?,
         })
     }
@@ -32,23 +32,33 @@ impl Device {
         if let Some(sks) = self.inner.device().supported_keys() {
             vdb = vdb.with_keys(sks)?;
         } else {
-            return Err(Error::NoSupportedKeys)
+            return Err(Error::NoSupportedKeys);
         }
-        Ok(UInputDevice{
+        Ok(UInputDevice {
             inner: vdb.build()?,
         })
     }
 }
 
-impl event::KeyboardEventSource for Device {
-    fn recv(&mut self) ->Result<event::KeyboardEvent> {
+impl event::InputEventSource for Device {
+    fn recv(&mut self) -> Result<Option<event::InputEvent>> {
         let ev = block_on(self.inner.next_event())?;
-        if let Some(kc) = num::FromPrimitive::from_u16(ev.code()) {
-            Ok(event::KeyboardEvent {
-                time: ev.timestamp(),
-                code: kc,
-                state: i32_into_ks(ev.value()),
-            })
+        if let Some(ec) = num::FromPrimitive::from_u16(ev.code()) {
+            match ev.event_type() {
+                evdev::EventType::KEY => Ok(Some(event::InputEvent {
+                    time: ev.timestamp(),
+                    code: ec,
+                    state: i32_into_ks(ev.value()),
+                    ty: event::EventType::KEY,
+                })),
+                evdev::EventType::SYNCHRONIZATION => Ok(Some(event::InputEvent {
+                    time: ev.timestamp(),
+                    code: ec,
+                    state: i32_into_ks(ev.value()),
+                    ty: event::EventType::SYN,
+                })),
+                _ => Ok(None),
+            }
         } else {
             Err(Error::UnrecognizedInputEvent)
         }
@@ -68,12 +78,13 @@ pub struct UInputDevice {
     inner: evdev::uinput::VirtualDevice,
 }
 
-impl event::KeyboardEventSink for UInputDevice {
-    fn send(&mut self, ke: event::KeyboardEvent) ->Result<()> {
-        self.inner.emit(&[
-            evdev::InputEvent::new(evdev::EventType::KEY, ke.code as u16, ke.state as i32)
-        ])?;
+impl event::InputEventSink for UInputDevice {
+    fn send(&mut self, ke: event::InputEvent) -> Result<()> {
+        self.inner.emit(&[evdev::InputEvent::new(
+            evdev::EventType::KEY,
+            ke.code as u16,
+            ke.state as i32,
+        )])?;
         Ok(())
     }
-
 }
