@@ -1,4 +1,3 @@
-use log::debug;
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
@@ -8,7 +7,7 @@ use qsk_events::KeyState::*;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ControlCode {
-    KeyboardEvent(event::KeyboardEvent),
+    InputEvent(event::InputEvent),
     KeyMap(event::KeyCode),
     TapToggle(usize, event::KeyCode),
     Exit,
@@ -17,19 +16,18 @@ pub enum ControlCode {
 pub struct Passthrough {}
 
 impl InputTransformer for Passthrough {
-    fn transform(&mut self, e: event::KeyboardEvent) -> Option<Vec<ControlCode>> {
+    fn transform(&mut self, e: event::InputEvent) -> Option<Vec<ControlCode>> {
         match e.code {
             KC_PAUSE => Some(vec![ControlCode::Exit]),
             _ => {
-                debug!("{:?} {:?}", e.code, e.state);
-                Some(vec![ControlCode::KeyboardEvent(e)])
+                Some(vec![ControlCode::InputEvent(e)])
             }
         }
     }
 }
 
 pub trait InputTransformer {
-    fn transform(&mut self, e: event::KeyboardEvent) -> Option<Vec<ControlCode>>;
+    fn transform(&mut self, e: event::InputEvent) -> Option<Vec<ControlCode>>;
 }
 
 pub struct Layer {
@@ -42,7 +40,7 @@ impl Layer {
         Layer { map, active }
     }
 
-    fn transform(&mut self, e: event::KeyboardEvent) -> Option<Vec<ControlCode>> {
+    fn transform(&mut self, e: event::InputEvent) -> Option<Vec<ControlCode>> {
         match (self.map.get(&e.code), self.active) {
             (Some(ccs), true) => {
                 let mut output: Vec<ControlCode> = Vec::new();
@@ -51,7 +49,7 @@ impl Layer {
                         ControlCode::KeyMap(kc) => {
                             let mut cloned = e.clone();
                             cloned.code = *kc;
-                            output.push(ControlCode::KeyboardEvent(cloned));
+                            output.push(ControlCode::InputEvent(cloned));
                         }
                         _ => output.push(cc.clone()),
                     }
@@ -115,22 +113,24 @@ impl LayerComposer {
 
     fn key_up_and_down(&self, k: event::KeyCode) -> Vec<ControlCode> {
         vec![
-            ControlCode::KeyboardEvent(event::KeyboardEvent {
+            ControlCode::InputEvent(event::InputEvent {
                 time: self.now(),
                 code: k,
                 state: Down,
+                ty: event::EventType::KEY,
             }),
-            ControlCode::KeyboardEvent(event::KeyboardEvent {
+            ControlCode::InputEvent(event::InputEvent {
                 time: self.now(),
                 code: k,
                 state: Up,
+                ty: event::EventType::KEY,
             }),
         ]
     }
 
     fn handle_control_codes(
         &mut self,
-        e: &event::KeyboardEvent,
+        e: &event::InputEvent,
         ccs: Vec<ControlCode>,
     ) -> Option<Vec<ControlCode>> {
         let mut output: Vec<ControlCode> = Vec::new();
@@ -178,7 +178,7 @@ impl LayerComposer {
 }
 
 impl InputTransformer for LayerComposer {
-    fn transform(&mut self, e: event::KeyboardEvent) -> Option<Vec<ControlCode>> {
+    fn transform(&mut self, e: event::InputEvent) -> Option<Vec<ControlCode>> {
         for l in &mut self.layers.iter_mut().rev() {
             match l.transform(e) {
                 Some(ccs) => return self.handle_control_codes(&e, ccs),
@@ -208,8 +208,8 @@ mod layer_composer {
     use super::*;
 
     impl LayerComposer {
-        fn ke(&self, kc: event::KeyCode, ks: event::KeyState) -> event::KeyboardEvent {
-            event::KeyboardEvent {
+        fn ke(&self, kc: event::KeyCode, ks: event::KeyState) -> event::InputEvent {
+            event::InputEvent {
                 time: self.nower.now(),
                 code: kc,
                 state: ks,
@@ -218,20 +218,20 @@ mod layer_composer {
 
         fn validate_single(
             &mut self,
-            input: event::KeyboardEvent,
-            output: Option<event::KeyboardEvent>,
+            input: event::InputEvent,
+            output: Option<event::InputEvent>,
         ) {
             let result = self.transform(input);
             match output {
                 None => assert_that!(&result, eq(None)),
                 Some(e) => {
-                    let expect = vec![ControlCode::KeyboardEvent(e)];
+                    let expect = vec![ControlCode::InputEvent(e)];
                     assert_that!(&result.unwrap(), contains_in_order(expect));
                 }
             };
         }
 
-        fn validate_multiple(&mut self, input: event::KeyboardEvent, output: Vec<ControlCode>) {
+        fn validate_multiple(&mut self, input: event::InputEvent, output: Vec<ControlCode>) {
             assert_that!(&self.transform(input).unwrap(), contains_in_order(output));
         }
     }
@@ -389,8 +389,8 @@ mod layer_composer {
         th.validate_multiple(
             th.ke(KC_F, Up),
             vec![
-                ControlCode::KeyboardEvent(th.ke(KC_F, Down)),
-                ControlCode::KeyboardEvent(th.ke(KC_F, Up)),
+                ControlCode::InputEvent(th.ke(KC_F, Down)),
+                ControlCode::InputEvent(th.ke(KC_F, Up)),
             ],
         );
     }
