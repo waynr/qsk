@@ -13,9 +13,8 @@ use qsk_errors::Result;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct InputEvent {
     pub time: SystemTime,
-    pub code: KeyCode,
+    pub code: EventCode,
     pub state: KeyState,
-    pub ty: EventType,
 }
 
 #[derive(FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -31,6 +30,12 @@ pub enum KeyState {
     Up = 0,
     Held = 2,
     NotImplemented = 3,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum EventCode {
+    KeyCode(KeyCode),
+    SynCode(SynCode),
 }
 
 /// Copied and pasted from evdev-rs 0.3.1 with s/KEY_/KC_/ to align more closely with QMK naming
@@ -480,7 +485,7 @@ pub enum KeyCode {
     NotImplemented = 768,
 }
 
-#[derive(FromPrimitive, ToPrimitive, Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum SynCode {
     Report = 0,
     Config = 1,
@@ -490,7 +495,7 @@ pub enum SynCode {
 }
 
 pub trait InputEventSource: Send {
-    fn recv(&mut self) -> Result<Option<InputEvent>>;
+    fn recv(&mut self) -> Result<InputEvent>;
 }
 
 pub trait InputEventSink: Send {

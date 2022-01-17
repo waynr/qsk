@@ -64,9 +64,10 @@ impl QSKEngine {
                     let t = src.recv();
                     trace!("received InputEvent from keyboard");
                     match t {
-                        Ok(Some(a)) => input_sender.send(a).await,
-                        Ok(None) => (),
-                        Err(err) => error!("error reading from keyboard device: {:?}", err),
+                        Ok(a) => input_sender.send(a).await,
+                        Err(err) => {
+                            error!("error reading from keyboard device: {:?}", err)
+                        },
                     }
                     trace!("sent InputEvent to handler");
                 }
