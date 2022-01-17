@@ -4,19 +4,27 @@ use num_derive::{FromPrimitive, ToPrimitive};
 
 use qsk_errors::Result;
 
-// KeyboardEvent is a QSK-specific struct modeled in large part after evdev_rs::InputEvent.
-// Although evdev_rs::InputEvent actually supports a large range of Linux-specific input events, we
-// focus here on keyboard events specifically since keyboard events are the primary concern of QSK
-// to begin with. Abstracting away from Linux-specific event handling in this way will enable us to
-// support input event systems for other OSes in the future.
+/// InputEvent is a qsk-specific struct modeled in large part after evdev_rs::InputEvent.
+/// Although evdev_rs::InputEvent actually supports a large range of Linux-specific input events,
+/// we focus here on keyboard and synchronization events specifically since keyboard events are the
+/// primary concern of qsk initially and synchronization needs to be represented. Abstracting away
+/// from Linux-specific event handling in this way will enable us to support input event systems
+/// for other OSes in the future.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct KeyboardEvent {
+pub struct InputEvent {
     pub time: SystemTime,
     pub code: KeyCode,
     pub state: KeyState,
+    pub ty: EventType,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum EventType {
+    SYN = 0,
+    KEY = 1,
+}
+
+#[derive(FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[allow(dead_code)]
 pub enum KeyState {
     Down = 1,
@@ -25,8 +33,8 @@ pub enum KeyState {
     NotImplemented = 3,
 }
 
-// Copied and pasted from evdev-rs 0.3.1 with s/KEY_/KC_/ to align more closely with QMK naming
-// key code naming conventions.
+/// Copied and pasted from evdev-rs 0.3.1 with s/KEY_/KC_/ to align more closely with QMK naming
+/// key code naming conventions.
 #[allow(non_camel_case_types)]
 #[derive(FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[allow(dead_code)]
@@ -472,10 +480,19 @@ pub enum KeyCode {
     NotImplemented = 768,
 }
 
-pub trait KeyboardEventSource: Send {
-    fn recv(&mut self) -> Result<KeyboardEvent>;
+#[derive(FromPrimitive, ToPrimitive, Clone, Debug, PartialEq, Eq, Hash)]
+pub enum SynCode {
+    Report = 0,
+    Config = 1,
+    MTReport = 2,
+    Dropped = 3,
+    Max = 15,
 }
 
-pub trait KeyboardEventSink: Send {
-    fn send(&mut self, e: KeyboardEvent) -> Result<()>;
+pub trait InputEventSource: Send {
+    fn recv(&mut self) -> Result<Option<InputEvent>>;
+}
+
+pub trait InputEventSink: Send {
+    fn send(&mut self, e: InputEvent) -> Result<()>;
 }
