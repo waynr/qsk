@@ -214,7 +214,7 @@ mod layer_composer {
         fn ke(&self, kc: event::KeyCode, ks: event::KeyState) -> event::InputEvent {
             event::InputEvent {
                 time: self.nower.now(),
-                code: kc,
+                code: EventCode::KeyCode(kc),
                 state: ks,
             }
         }
@@ -279,19 +279,18 @@ mod layer_composer {
 
         layers.insert(
             LAYERS::HomerowCodeRight.into(),
-            Layer {
-                active: true,
-                map: hashmap!(
+            Layer::from_hashmap(
+                hashmap!(
                     KC_F => tap_toggle(LAYERS::Navigation.into(), KC_F)
                 ),
-            },
+                true,
+            ),
         );
 
         layers.insert(
             LAYERS::Navigation.into(),
-            Layer {
-                active: false,
-                map: hashmap!(
+            Layer::from_hashmap(
+                hashmap!(
                     KC_Y => key(KC_HOME),
                     KC_U => key(KC_PAGEDOWN),
                     KC_I => key(KC_PAGEUP),
@@ -301,7 +300,8 @@ mod layer_composer {
                     KC_K => key(KC_UP),
                     KC_SEMICOLON => key(KC_RIGHT),
                 ),
-            },
+                false,
+            ),
         );
 
         LayerComposer {
