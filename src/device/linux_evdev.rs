@@ -7,7 +7,7 @@ use evdev::uinput;
 
 use crate::errors::{Error, Result};
 use crate::events as event;
-use crate::events::{EventCode, SynCode, KeyCode};
+use crate::events::{InputEvent, EventCode, SynCode, KeyCode};
 
 pub struct Device {
     inner: evdev::EventStream,
@@ -61,8 +61,6 @@ impl Device {
     }
 }
 
-struct InputEvent(event::InputEvent);
-
 impl TryFrom<evdev::InputEvent> for InputEvent {
     type Error = Error;
 
@@ -85,12 +83,14 @@ impl TryFrom<evdev::InputEvent> for InputEvent {
             _ => None,
         };
         match ec {
-            Some(code) => Ok(InputEvent(event::InputEvent{
+            Some(code) => Ok(event::InputEvent{
                 time: ev.timestamp(),
                 code,
                 state: i32_into_ks(ev.value()),
-            })),
-            None => Err(Error::UnrecognizedEvdevInputEvent),
+            }),
+            None => Err(Error::UnrecognizedEvdevInputEvent{
+                e: ev,
+            }),
         }
     }
 }
@@ -99,14 +99,14 @@ impl TryFrom<InputEvent> for evdev::InputEvent {
     type Error = Error;
 
     fn try_from(ie: InputEvent) -> Result<evdev::InputEvent> {
-        let (ty, code) = match ie.0.code {
+        let (ty, code) = match ie.code {
             EventCode::KeyCode(c) => (evdev::EventType::SYNCHRONIZATION, c as i16),
             EventCode::SynCode(c) => (evdev::EventType::KEY, c as i16),
         };
         Ok(evdev::InputEvent::new(
             ty,
             code as u16,
-            ie.0.state as i32,
+            ie.state as i32,
         ))
     }
 }
@@ -114,7 +114,7 @@ impl TryFrom<InputEvent> for evdev::InputEvent {
 impl event::InputEventSource for Device {
     fn recv(&mut self) -> Result<event::InputEvent> {
         let ev = block_on(self.inner.next_event())?;
-        Ok(InputEvent::try_from(ev)?.0)
+        Ok(InputEvent::try_from(ev)?)
     }
 }
 
@@ -133,7 +133,7 @@ pub struct UInputDevice {
 
 impl event::InputEventSink for UInputDevice {
     fn send(&mut self, ie: event::InputEvent) -> Result<()> {
-        let evdev_ie = evdev::InputEvent::try_from(InputEvent(ie))?;
+        let evdev_ie = evdev::InputEvent::try_from(ie)?;
         self.inner.emit(&[evdev_ie])?;
         Ok(())
     }

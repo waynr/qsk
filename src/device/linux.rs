@@ -16,7 +16,7 @@ use crate::errors::Error;
 use crate::errors::Result;
 
 use crate::events as event;
-use crate::events::{EventCode, SynCode, KeyCode};
+use crate::events::{InputEvent, EventCode, SynCode, KeyCode};
 
 pub struct Device {
     inner: Arc<Mutex<evdev_rs::Device>>,
@@ -24,22 +24,20 @@ pub struct Device {
 
 unsafe impl Send for Device {}
 
-struct InputEvent(event::InputEvent);
-
 impl TryFrom<evdev_rs::InputEvent> for InputEvent {
     type Error = Error;
 
     fn try_from(ev: evdev_rs::InputEvent) -> Result<InputEvent> {
         let c = match ev.event_code {
-            enums::EventCode::EV_KEY(ec) => {
-                let kc: Option<KeyCode> = num::FromPrimitive::from_u16(ec as u16);
+            enums::EventCode::EV_KEY(ref ec) => {
+                let kc: Option<KeyCode> = num::FromPrimitive::from_u16(ec.clone() as u16);
                 match kc {
                     Some(code) => Some(EventCode::KeyCode(code)),
                     None => None,
                 }
             },
-            enums::EventCode::EV_SYN(ec) => {
-                let sc: Option<SynCode> = num::FromPrimitive::from_u16(ec as u16);
+            enums::EventCode::EV_SYN(ref ec) => {
+                let sc: Option<SynCode> = num::FromPrimitive::from_u16(ec.clone() as u16);
                 match sc {
                     Some(code) => Some(EventCode::SynCode(code)),
                     None => None,
@@ -49,15 +47,17 @@ impl TryFrom<evdev_rs::InputEvent> for InputEvent {
         };
         match c {
             Some(code) => {
-                Ok(InputEvent(event::InputEvent {
+                Ok(event::InputEvent {
                     time: UNIX_EPOCH
                         + Duration::new(ev.time.tv_sec as u64, ev.time.tv_usec as u32 * 1000 as u32),
                     code,
                     state: i32_into_ks(ev.value),
-                }))
+                })
             },
             None => {
-                Err(Error::UnrecognizedEvdevRSInputEvent)
+                Err(Error::UnrecognizedEvdevRSInputEvent{
+                    e: ev,
+                })
             }
         }
     }
@@ -66,8 +66,8 @@ impl TryFrom<evdev_rs::InputEvent> for InputEvent {
 impl TryFrom<InputEvent> for evdev_rs::InputEvent {
     type Error = Error;
 
-    fn try_from(ev: InputEvent) -> Result<evdev_rs::InputEvent> {
-        let c = match ev.0.code {
+    fn try_from(ie: InputEvent) -> Result<evdev_rs::InputEvent> {
+        let c = match ie.code {
             EventCode::KeyCode(c) => {
                 match enums::int_to_ev_key(c as u32) {
                     Some(key) => Some(enums::EventCode::EV_KEY(key)),
@@ -83,7 +83,7 @@ impl TryFrom<InputEvent> for evdev_rs::InputEvent {
 
         };
 
-        let d = match ev.0.time.duration_since(UNIX_EPOCH) {
+        let d = match ie.time.duration_since(UNIX_EPOCH) {
             Ok(n) => n,
             Err(_) => Duration::new(0, 0),
         };
@@ -95,9 +95,11 @@ impl TryFrom<InputEvent> for evdev_rs::InputEvent {
                 },
                 event_type: enums::EventType::EV_KEY,
                 event_code,
-                value: ev.0.state as i32,
+                value: ie.state as i32,
             }),
-            None => Err(Error::UnrecognizedInputEvent),
+            None => Err(Error::UnrecognizedInputEvent{
+                e: ie,
+            }),
         }
     }
 }
@@ -142,7 +144,7 @@ impl event::InputEventSource for Device {
         match guard.next_event(evdev_rs::ReadFlag::NORMAL | evdev_rs::ReadFlag::BLOCKING) {
             Ok(ev) => {
                 match InputEvent::try_from(ev.1) {
-                    Ok(ie) => Ok(ie.0),
+                    Ok(ie) => Ok(ie),
                     Err(e) => Err(e),
                 }
             }
@@ -168,7 +170,7 @@ impl event::InputEventSink for UInputDevice {
             }
         };
 
-        let ie = evdev_rs::InputEvent::try_from(InputEvent(e))?;
+        let ie = evdev_rs::InputEvent::try_from(e)?;
         match guard.write_event(&ie) {
             Ok(_) => (),
             Err(e) => return Err(Error::IO(e)),
