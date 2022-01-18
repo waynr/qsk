@@ -57,7 +57,7 @@ impl TryFrom<evdev_rs::InputEvent> for InputEvent {
                 }))
             },
             None => {
-                Err(Error::UnrecognizedEventCode)
+                Err(Error::UnrecognizedEvdevRSInputEvent)
             }
         }
     }
@@ -97,7 +97,7 @@ impl TryFrom<InputEvent> for evdev_rs::InputEvent {
                 event_code,
                 value: ev.0.state as i32,
             }),
-            None => Err(Error::UnrecognizedEventCode),
+            None => Err(Error::UnrecognizedInputEvent),
         }
     }
 }

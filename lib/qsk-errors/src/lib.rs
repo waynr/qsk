@@ -16,14 +16,11 @@ pub enum Error {
     #[error("unrecognized InputEvent")]
     UnrecognizedInputEvent,
 
-    #[error("unrecognized KeyState")]
-    UnrecognizedKeyCode,
+    #[error("unrecognized evdev::InputEvent")]
+    UnrecognizedEvdevInputEvent,
 
-    #[error("unrecognized EventCode")]
-    UnrecognizedEventCode,
-
-    #[error("unsupported EventType")]
-    UnsupportedEventType,
+    #[error("unrecognized evdev_rs::InputEvent")]
+    UnrecognizedEvdevRSInputEvent,
 
     #[error("time error")]
     SystemTimeError(#[from] std::time::SystemTimeError),

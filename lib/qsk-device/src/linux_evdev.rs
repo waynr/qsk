@@ -90,7 +90,7 @@ impl TryFrom<evdev::InputEvent> for InputEvent {
                 code,
                 state: i32_into_ks(ev.value()),
             })),
-            None => Err(Error::UnsupportedEventType),
+            None => Err(Error::UnrecognizedEvdevInputEvent),
         }
     }
 }
