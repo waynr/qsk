@@ -378,6 +378,47 @@ mod layer_composer {
     }
 
     #[test]
+    #[ignore]
+    // TODO: try to remember what i was going to test here over a year ago...
+    fn tap_toggle_regression_() {
+        assert!(false);
+        let fake_now = Box::new(FakeNow::new());
+        let mut th = test_layer_composer();
+        th.nower = fake_now.clone();
+        assert_that!(&th.layers[0].active, eq(true));
+        assert_that!(&th.layers[1].active, eq(false));
+
+        // initial button down of a tap toggle key should not produce any characters and should not
+        // set the toggle layer to active
+        th.validate_single(th.ke(KC_F, Down), None);
+        assert_that!(&th.layers[0].active, eq(true));
+        assert_that!(&th.layers[1].active, eq(false));
+    }
+
+    #[test]
+    #[ignore]
+    // TODO: try to remember what i was going to test here over a year ago...
+    fn tap_toggle_tap_short_circuits_timeout() {
+        assert!(false);
+        let fake_now = Box::new(FakeNow::new());
+        let mut th = test_layer_composer();
+        th.nower = fake_now.clone();
+        assert_that!(&th.layers[0].active, eq(true));
+        assert_that!(&th.layers[1].active, eq(false));
+
+        // if we type from the layer in question within the timeout the layer is activated
+        th.validate_single(th.ke(KC_F, Down), None);
+        fake_now.adjust_now(Duration::from_millis(10));
+        th.validate_multiple(
+            th.ke(KC_F, Up),
+            vec![
+                ControlCode::InputEvent(th.ke(KC_F, Down)),
+                ControlCode::InputEvent(th.ke(KC_F, Up)),
+            ],
+        );
+    }
+
+    #[test]
     fn tap_toggle_tap() {
         let fake_now = Box::new(FakeNow::new());
         let mut th = test_layer_composer();
