@@ -2,7 +2,7 @@ use std::time::SystemTime;
 
 use num_derive::{FromPrimitive, ToPrimitive};
 
-use qsk_errors::Result;
+use crate::errors::Result;
 
 /// InputEvent is a qsk-specific struct modeled in large part after evdev_rs::InputEvent.
 /// Although evdev_rs::InputEvent actually supports a large range of Linux-specific input events,

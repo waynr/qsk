@@ -5,9 +5,9 @@ use futures::executor::block_on;
 use evdev;
 use evdev::uinput;
 
-use qsk_errors::{Error, Result};
-use qsk_events as event;
-use qsk_events::{EventCode, SynCode, KeyCode};
+use crate::errors::{Error, Result};
+use crate::events as event;
+use crate::events::{EventCode, SynCode, KeyCode};
 
 pub struct Device {
     inner: evdev::EventStream,

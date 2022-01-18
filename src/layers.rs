@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
-use qsk_events as event;
-use qsk_events::{
+use crate::events as event;
+use crate::events::{
     EventCode, KeyCode::*, KeyState::*,
 };
 

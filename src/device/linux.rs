@@ -12,11 +12,11 @@ use evdev_rs::GrabMode;
 use evdev_rs::TimeVal;
 use log::error;
 
-use qsk_errors::Error;
-use qsk_errors::Result;
+use crate::errors::Error;
+use crate::errors::Result;
 
-use qsk_events as event;
-use qsk_events::{EventCode, SynCode, KeyCode};
+use crate::events as event;
+use crate::events::{EventCode, SynCode, KeyCode};
 
 pub struct Device {
     inner: Arc<Mutex<evdev_rs::Device>>,

@@ -4,15 +4,13 @@ version = "0.1.0"
 authors = ["Wayne Warren <wayne.warren.s@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "qsk"
+path = "src/lib.rs"
 
-[workspace]
-members = [
-  "lib/qsk-layers",
-  "lib/qsk-events",
-  "lib/qsk-engine",
-  "lib/qsk-device",
-]
+[[bin]]
+name = "qsk"
+path = "src/main.rs"
 
 [dependencies]
 async-std = { version = "~1.5", features = ["unstable"] }
@@ -25,8 +23,20 @@ fern = "~0.5" # log implementation
 # logging
 log = "~0.4"
 
-# qsk
-qsk-events = { version = "0.1.0", path = "lib/qsk-events" }
-qsk-layers = { version = "0.1.0", path = "lib/qsk-layers" }
-qsk-engine = { version = "0.1.0", path = "lib/qsk-engine" }
-qsk-device = { version = "0.1.0", path = "lib/qsk-device" }
+# errors
+thiserror = "1.0"
+
+# events
+num = "~0.3"
+num-derive = "~0.3"
+num-traits = "~0.2"
+
+# device
+evdev-rs = "0.4"
+#evdev = "~0.11"
+evdev = { path = "../evdev", features = ["tokio"]}
+futures = "~0.3"
+
+[dev-dependencies]
+galvanic-assert = "~0.8"
+maplit = "1.0"

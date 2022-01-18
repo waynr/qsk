@@ -7,14 +7,14 @@ use clap::ArgMatches;
 mod cli;
 use cli::get_clap_app;
 
-use qsk_device::linux_evdev;
-use qsk_device::linux::Device;
-use qsk_engine::QSKEngine;
-use qsk_events::KeyCode::*;
-use qsk_layers::key;
-use qsk_layers::tap_toggle;
-use qsk_layers::Layer;
-use qsk_layers::LayerComposer;
+use qsk::device::linux_evdev;
+use qsk::device::linux::Device;
+use qsk::engine::QSKEngine;
+use qsk::events::KeyCode::*;
+use qsk::layers::key;
+use qsk::layers::tap_toggle;
+use qsk::layers::Layer;
+use qsk::layers::LayerComposer;
 
 #[derive(Clone, Debug, PartialEq, Copy)]
 enum LAYERS {
