@@ -18,12 +18,6 @@ pub struct InputEvent {
 }
 
 #[derive(FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum EventType {
-    SYN = 0,
-    KEY = 1,
-}
-
-#[derive(FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[allow(dead_code)]
 pub enum KeyState {
     Up = 0,
