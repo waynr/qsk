@@ -8,6 +8,13 @@ use log;
 pub fn get_clap_app() -> Result<ArgMatches, Box<dyn std::error::Error>> {
     let remap = App::new("remap")
         .arg(
+            Arg::new("passthrough")
+                .short('p')
+                .long("passthrough")
+                .takes_value(false)
+                .help("Use passthrough mapper (for debugging purposes)"),
+        )
+        .arg(
             Arg::new("device-file")
                 .help("Input events file")
                 .takes_value(true)
