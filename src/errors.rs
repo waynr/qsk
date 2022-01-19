@@ -1,6 +1,5 @@
 use thiserror;
 
-use evdev_rs;
 use evdev;
 
 use crate::events;
@@ -26,11 +25,6 @@ pub enum Error {
     #[error("unrecognized evdev::InputEvent:\n time: {:?}, type: {:?} code: {:?} value: {:?}", .e.timestamp(), .e.event_type(), .e.code(), .e.value())]
     UnrecognizedEvdevInputEvent{
         e: evdev::InputEvent,
-    },
-
-    #[error("unrecognized evdev_rs::InputEvent:\n time: {:?}, type: {:?} code: {:?} value: {:?}", .e.time, .e.event_type, .e.event_code, .e.value)]
-    UnrecognizedEvdevRSInputEvent{
-        e: evdev_rs::InputEvent,
     },
 
     #[error("time error")]

@@ -1,6 +1,7 @@
 use std::error;
 
 use async_std::task;
+use async_compat::Compat;
 use maplit::hashmap;
 use clap::ArgMatches;
 
@@ -8,7 +9,7 @@ mod cli;
 use cli::get_clap_app;
 
 use qsk::device::linux_evdev;
-use qsk::device::linux::Device;
+use qsk::device::linux_evdev::Device;
 use qsk::engine::QSKEngine;
 use qsk::events::KeyCode::*;
 use qsk::layers::key;
@@ -77,7 +78,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     match matches.subcommand() {
         Some(("list-devices", _)) => linux_evdev::Device::list()?,
-        Some(("remap", submatches)) => task::block_on(remap(submatches))?,
+        Some(("remap", submatches)) => task::block_on(Compat::new(remap(submatches)))?,
         _ => (),
     };
     Ok(())
