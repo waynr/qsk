@@ -118,7 +118,7 @@ impl LayerComposer {
 
     fn key_up_and_down(&self, k: event::KeyCode) -> Vec<ControlCode> {
         let now = self.now();
-        let now_plus = now + Duration::from_millis(1)
+        let now_plus = now + Duration::from_millis(1);
         vec![
             ControlCode::InputEvent(event::InputEvent {
                 time: now,
