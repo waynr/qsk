@@ -3,8 +3,7 @@ use std::fs::File;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::time::Duration;
-use std::time::UNIX_EPOCH;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use evdev_rs;
 use evdev_rs::enums;
@@ -83,10 +82,7 @@ impl TryFrom<InputEvent> for evdev_rs::InputEvent {
 
         };
 
-        let d = match ie.time.duration_since(UNIX_EPOCH) {
-            Ok(n) => n,
-            Err(_) => Duration::new(0, 0),
-        };
+        let d = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
         match c {
             Some(event_code) => Ok(evdev_rs::InputEvent {
                 time: TimeVal {
