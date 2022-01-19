@@ -8,6 +8,7 @@ use log::debug;
 use log::trace;
 use log::error;
 
+use crate::events::EventCode;
 use crate::events::InputEvent;
 use crate::events::InputEventSink;
 use crate::events::InputEventSource;
@@ -27,13 +28,19 @@ impl QSKEngine {
 
     pub async fn handle(mut self, mut r: Receiver<InputEvent>, s: Sender<InputEvent>) {
         while let Some(e) = r.next().await {
-            debug!("recv: {:?} {:?}", e.code, e.state);
+            match e.code {
+                EventCode::SynCode(_) => trace!("recv: {:?} {:?}", e.code, e.state),
+                _ => debug!("recv: {:?} {:?}", e.code, e.state),
+            };
             if let Some(e_vec) = self.input_transformer.transform(e) {
                 for cc in e_vec.iter() {
                     match cc {
                         ControlCode::InputEvent(v) => {
                             s.send(v.clone()).await;
-                            debug!("send: {:?} {:?}", v.code, v.state);
+                            match e.code {
+                                EventCode::SynCode(_) => trace!("recv: {:?} {:?}", v.code, v.state),
+                                _ => debug!("senc: {:?} {:?}", v.code, v.state),
+                            };
                         },
                         ControlCode::Exit => return,
                         _ => continue,
