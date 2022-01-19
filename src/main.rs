@@ -8,8 +8,8 @@ use clap::ArgMatches;
 mod cli;
 use cli::get_clap_app;
 
-use qsk::device::linux_evdev;
-use qsk::device::linux_evdev::Device;
+use qsk::device::linux;
+use qsk::device::linux::Device;
 use qsk::engine::QSKEngine;
 use qsk::events::KeyCode::*;
 use qsk::layers::key;
@@ -77,7 +77,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let matches = get_clap_app()?;
 
     match matches.subcommand() {
-        Some(("list-devices", _)) => linux_evdev::Device::list()?,
+        Some(("list-devices", _)) => linux::Device::list()?,
         Some(("remap", submatches)) => task::block_on(Compat::new(remap(submatches)))?,
         _ => (),
     };
