@@ -120,8 +120,8 @@ impl event::InputEventSource for Device {
 
 fn i32_into_ks(i: i32) -> event::KeyState {
     match i {
-        1 => event::KeyState::Up,
-        0 => event::KeyState::Down,
+        0 => event::KeyState::Up,
+        1 => event::KeyState::Down,
         2 => event::KeyState::Held,
         _ => event::KeyState::NotImplemented,
     }

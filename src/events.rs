@@ -26,8 +26,8 @@ pub enum EventType {
 #[derive(FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[allow(dead_code)]
 pub enum KeyState {
-    Down = 1,
     Up = 0,
+    Down = 1,
     Held = 2,
     NotImplemented = 3,
 }
