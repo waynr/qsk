@@ -17,6 +17,7 @@ use qsk::layers::tap_toggle;
 use qsk::layers::Layer;
 use qsk::layers::LayerComposer;
 use qsk::layers::Passthrough;
+use qsk::listener::StdoutListener;
 
 #[derive(Clone, Debug, PartialEq, Copy)]
 enum LAYERS {
@@ -73,11 +74,21 @@ async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
     Ok(())
 }
 
+fn listen(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
+    let input_events_file = matches.value_of_t("device-file")?;
+    let myd = Device::from_path(input_events_file)?;
+    let mut listener = StdoutListener::from_device(myd);
+    listener.listen();
+
+    Ok(())
+}
+
 fn main() -> Result<(), Box<dyn error::Error>> {
     let matches = get_clap_app()?;
 
     match matches.subcommand() {
         Some(("list-devices", _)) => linux::Device::list()?,
+        Some(("listen", submatches)) => listen(submatches)?,
         Some(("remap", submatches)) => task::block_on(Compat::new(remap(submatches)))?,
         _ => (),
     };

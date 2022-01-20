@@ -22,6 +22,15 @@ pub fn get_clap_app() -> Result<ArgMatches, Box<dyn std::error::Error>> {
         )
         .about("remap the keyboard represented by the specified device file");
 
+    let listen = App::new("listen")
+        .arg(
+            Arg::new("device-file")
+                .help("Input events file")
+                .takes_value(true)
+                .required(true),
+        )
+        .about("listen to and print events stdout");
+
     let list_devices = App::new("list-devices")
         .about("list keyboard-type devices available for remapping");
 
@@ -39,6 +48,7 @@ pub fn get_clap_app() -> Result<ArgMatches, Box<dyn std::error::Error>> {
         .author("Wayne Warren <wayne.warren.s@gmail.com>")
         .about("The keyboard remapping software you never knew you wanted.")
         .subcommand(remap)
+        .subcommand(listen)
         .subcommand(list_devices)
         .get_matches();
 
