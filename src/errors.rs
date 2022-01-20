@@ -17,7 +17,7 @@ pub enum Error {
     #[error("io error")]
     NoEvents,
 
-    #[error("unrecognized InputEvent\n code: {:?} value: {:?}", .e.code, .e.state)]
+    #[error("unrecognized InputEvent\n time: {:?}, code: {:?} value: {:?}", .e.time, .e.code, .e.state)]
     UnrecognizedInputEvent{
         e: events::InputEvent,
     },

@@ -84,6 +84,7 @@ impl TryFrom<evdev::InputEvent> for InputEvent {
         };
         match ec {
             Some(code) => Ok(event::InputEvent{
+                time: ev.timestamp(),
                 code,
                 state: i32_into_ks(ev.value()),
             }),

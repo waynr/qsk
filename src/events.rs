@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use num_derive::{FromPrimitive, ToPrimitive};
 
 use crate::errors::Result;
@@ -10,6 +12,7 @@ use crate::errors::Result;
 /// for other OSes in the future.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct InputEvent {
+    pub time: SystemTime,
     pub code: EventCode,
     pub state: KeyState,
 }
