@@ -39,7 +39,7 @@ impl QSKEngine {
                             s.send(v.clone()).await;
                             match e.code {
                                 EventCode::SynCode(_) => trace!("recv: {:?} {:?}", v.code, v.state),
-                                _ => debug!("senc: {:?} {:?}", v.code, v.state),
+                                _ => debug!("send: {:?} {:?}", v.code, v.state),
                             };
                         },
                         ControlCode::Exit => return,
