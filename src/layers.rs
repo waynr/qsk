@@ -213,7 +213,7 @@ mod layer_composer {
     use super::*;
 
     impl LayerComposer {
-        fn ke(&self, kc: event::KeyCode, ks: event::KeyState) -> event::InputEvent {
+        fn key(&self, kc: event::KeyCode, ks: event::KeyState) -> event::InputEvent {
             event::InputEvent {
                 time: self.nower.now(),
                 code: EventCode::KeyCode(kc),
@@ -336,14 +336,14 @@ mod layer_composer {
         assert_that!(&th.layers[0].active, eq(true));
         assert_that!(&th.layers[1].active, eq(false));
 
-        th.validate_single(th.ke(KC_E, Down), Some(th.ke(KC_E, Down)));
-        th.validate_single(th.ke(KC_E, Up), Some(th.ke(KC_E, Up)));
+        th.validate_single(th.key(KC_E, Down), Some(th.key(KC_E, Down)));
+        th.validate_single(th.key(KC_E, Up), Some(th.key(KC_E, Up)));
 
-        th.validate_single(th.ke(KC_K, Down), Some(th.ke(KC_K, Down)));
-        th.validate_single(th.ke(KC_K, Up), Some(th.ke(KC_K, Up)));
+        th.validate_single(th.key(KC_K, Down), Some(th.key(KC_K, Down)));
+        th.validate_single(th.key(KC_K, Up), Some(th.key(KC_K, Up)));
 
-        th.validate_single(th.ke(KC_J, Down), Some(th.ke(KC_J, Down)));
-        th.validate_single(th.ke(KC_J, Up), Some(th.ke(KC_J, Up)));
+        th.validate_single(th.key(KC_J, Down), Some(th.key(KC_J, Down)));
+        th.validate_single(th.key(KC_J, Up), Some(th.key(KC_J, Up)));
     }
 
     #[test]
@@ -356,27 +356,27 @@ mod layer_composer {
 
         // initial button down of a tap toggle key should not produce any characters and should not
         // set the toggle layer to active
-        th.validate_single(th.ke(KC_F, Down), None);
+        th.validate_single(th.key(KC_F, Down), None);
         assert_that!(&th.layers[1].active, eq(false));
 
         // layer doesn't get set to active until both after the next Held key event after the tap
         // toggle timeout
         fake_now.adjust_now(Duration::from_millis(1000));
         assert_that!(&th.layers[1].active, eq(false));
-        th.validate_single(th.ke(KC_F, Held), None);
+        th.validate_single(th.key(KC_F, Held), None);
         assert_that!(&th.layers[1].active, eq(true));
 
         // once layer is active, key transformation should take place based on definitions in the
         // activated layer
-        th.validate_single(th.ke(KC_J, Down), Some(th.ke(KC_DOWN, Down)));
-        th.validate_single(th.ke(KC_J, Up), Some(th.ke(KC_DOWN, Up)));
+        th.validate_single(th.key(KC_J, Down), Some(th.key(KC_DOWN, Down)));
+        th.validate_single(th.key(KC_J, Up), Some(th.key(KC_DOWN, Up)));
 
         // if layer is toggled, releasing tap toggle key after tap toggle timeout should result in
         // no keyboard events and should result in the layer being disabled once again
-        th.validate_single(th.ke(KC_F, Up), None);
+        th.validate_single(th.key(KC_F, Up), None);
         assert_that!(&th.layers[1].active, eq(false));
-        th.validate_single(th.ke(KC_J, Down), Some(th.ke(KC_J, Down)));
-        th.validate_single(th.ke(KC_J, Up), Some(th.ke(KC_J, Up)));
+        th.validate_single(th.key(KC_J, Down), Some(th.key(KC_J, Down)));
+        th.validate_single(th.key(KC_J, Up), Some(th.key(KC_J, Up)));
     }
 
     #[test]
@@ -392,7 +392,7 @@ mod layer_composer {
 
         // initial button down of a tap toggle key should not produce any characters and should not
         // set the toggle layer to active
-        th.validate_single(th.ke(KC_F, Down), None);
+        th.validate_single(th.key(KC_F, Down), None);
         assert_that!(&th.layers[0].active, eq(true));
         assert_that!(&th.layers[1].active, eq(false));
     }
@@ -409,13 +409,13 @@ mod layer_composer {
         assert_that!(&th.layers[1].active, eq(false));
 
         // if we type from the layer in question within the timeout the layer is activated
-        th.validate_single(th.ke(KC_F, Down), None);
+        th.validate_single(th.key(KC_F, Down), None);
         fake_now.adjust_now(Duration::from_millis(10));
         th.validate_multiple(
-            th.ke(KC_F, Up),
+            th.key(KC_F, Up),
             vec![
-                ControlCode::InputEvent(th.ke(KC_F, Down)),
-                ControlCode::InputEvent(th.ke(KC_F, Up)),
+                ControlCode::InputEvent(th.key(KC_F, Down)),
+                ControlCode::InputEvent(th.key(KC_F, Up)),
             ],
         );
     }
@@ -424,20 +424,22 @@ mod layer_composer {
     fn tap_toggle_tap() {
         let fake_now = Box::new(FakeNow::new());
         let mut th = test_layer_composer();
+        let mut expected: Vec<ControlCode> = Vec::new();
         th.nower = fake_now.clone();
         assert_that!(&th.layers[0].active, eq(true));
         assert_that!(&th.layers[1].active, eq(false));
 
         // if we release the key within the tap toggle timeout, then we should get the tapped key's
         // usual output in sequence
-        th.validate_single(th.ke(KC_F, Down), None);
-        fake_now.adjust_now(Duration::from_millis(10));
+        th.validate_single(th.key(KC_F, Down), None);
+
+        let down = th.key(KC_F, Down);
+        let mut up = th.key(KC_F, Up);
+        expected.push(ControlCode::InputEvent(down));
+        expected.push(ControlCode::InputEvent(up));
         th.validate_multiple(
-            th.ke(KC_F, Up),
-            vec![
-                ControlCode::InputEvent(th.ke(KC_F, Down)),
-                ControlCode::InputEvent(th.ke(KC_F, Up)),
-            ],
+            th.key(KC_F, Up),
+            expected,
         );
     }
 }
