@@ -276,7 +276,7 @@ mod layer_composer {
         }
     }
 
-    fn test_layer_composer() -> LayerComposer {
+    fn test_layer_composer() -> (LayerComposer, FakeNow) {
         let mut layers = Vec::with_capacity(8);
 
         layers.insert(
@@ -306,12 +306,13 @@ mod layer_composer {
             ),
         );
 
-        LayerComposer {
+        let fake_now = FakeNow::new();
+        (LayerComposer {
             base: Box::new(Passthrough {}),
             layers,
             timers: HashMap::new(),
-            nower: Box::new(RealNower {}),
-        }
+            nower: Box::new(fake_now.clone()),
+        }, fake_now)
     }
 
     #[test]
@@ -330,9 +331,7 @@ mod layer_composer {
 
     #[test]
     fn passthrough_no_active_layers() {
-        let fake_now = Box::new(FakeNow::new());
-        let mut th = test_layer_composer();
-        th.nower = fake_now.clone();
+        let (mut th, _) = test_layer_composer();
         assert_that!(&th.layers[0].active, eq(true));
         assert_that!(&th.layers[1].active, eq(false));
 
@@ -348,9 +347,7 @@ mod layer_composer {
 
     #[test]
     fn tap_toggle_toggle() {
-        let fake_now = Box::new(FakeNow::new());
-        let mut th = test_layer_composer();
-        th.nower = fake_now.clone();
+        let (mut th, fake_now) = test_layer_composer();
         assert_that!(&th.layers[0].active, eq(true));
         assert_that!(&th.layers[1].active, eq(false));
 
@@ -384,9 +381,7 @@ mod layer_composer {
     // TODO: try to remember what i was going to test here over a year ago...
     fn tap_toggle_regression_() {
         assert!(false);
-        let fake_now = Box::new(FakeNow::new());
-        let mut th = test_layer_composer();
-        th.nower = fake_now.clone();
+        let (mut th, _) = test_layer_composer();
         assert_that!(&th.layers[0].active, eq(true));
         assert_that!(&th.layers[1].active, eq(false));
 
@@ -402,9 +397,7 @@ mod layer_composer {
     // TODO: try to remember what i was going to test here over a year ago...
     fn tap_toggle_tap_short_circuits_timeout() {
         assert!(false);
-        let fake_now = Box::new(FakeNow::new());
-        let mut th = test_layer_composer();
-        th.nower = fake_now.clone();
+        let (mut th, fake_now) = test_layer_composer();
         assert_that!(&th.layers[0].active, eq(true));
         assert_that!(&th.layers[1].active, eq(false));
 
@@ -422,10 +415,8 @@ mod layer_composer {
 
     #[test]
     fn tap_toggle_tap() {
-        let fake_now = Box::new(FakeNow::new());
-        let mut th = test_layer_composer();
+        let (mut th, _) = test_layer_composer();
         let mut expected: Vec<ControlCode> = Vec::new();
-        th.nower = fake_now.clone();
         assert_that!(&th.layers[0].active, eq(true));
         assert_that!(&th.layers[1].active, eq(false));
 
