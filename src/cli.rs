@@ -25,7 +25,7 @@ pub fn get_clap_app() -> Result<ArgMatches, Box<dyn std::error::Error>> {
     let list_devices = App::new("list-devices")
         .about("list keyboard-type devices available for remapping");
 
-    let matches = App::new("quantom soft keyboard")
+    let matches = App::new("quantum soft keyboard")
         .arg(
             Arg::new("verbose")
                 .short('v')
