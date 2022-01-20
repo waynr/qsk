@@ -434,4 +434,19 @@ mod layer_composer {
             expected,
         );
     }
+
+    #[test]
+    fn key_up_and_down() {
+        let (th, _) = test_layer_composer();
+        let mut expected: Vec<ControlCode> = Vec::new();
+
+        let down = th.key(KC_F, Down);
+        let mut up = th.key(KC_F, Up);
+        up.time = down.time + Duration::from_micros(1);
+        expected.push(ControlCode::InputEvent(down));
+        expected.push(ControlCode::InputEvent(up));
+
+        let actual = th.key_up_and_down(KC_F);
+        assert_that!(&actual, contains_in_order(expected));
+    }
 }
