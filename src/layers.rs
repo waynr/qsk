@@ -118,7 +118,7 @@ impl LayerComposer {
 
     fn key_up_and_down(&self, k: event::KeyCode) -> Vec<ControlCode> {
         let now = self.now();
-        let now_plus = now + Duration::from_millis(1);
+        let now_plus = now + Duration::from_micros(1);
         vec![
             ControlCode::InputEvent(event::InputEvent {
                 time: now,
@@ -435,6 +435,7 @@ mod layer_composer {
 
         let down = th.key(KC_F, Down);
         let mut up = th.key(KC_F, Up);
+        up.time = down.time + Duration::from_micros(1);
         expected.push(ControlCode::InputEvent(down));
         expected.push(ControlCode::InputEvent(up));
         th.validate_multiple(
