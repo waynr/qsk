@@ -15,7 +15,13 @@ pub struct Device {
 
 impl Device {
     pub fn from_path(path: PathBuf) -> Result<Device> {
-        let mut d = evdev::Device::open(&path)?;
+        let d = evdev::Device::open(&path)?;
+        Ok(Device {
+            inner: d.into_event_stream()?,
+        })
+    }
+
+    pub fn from_evdev_device(mut d: evdev::Device) -> Result<Device> {
         d.grab()?;
         Ok(Device {
             inner: d.into_event_stream()?,
