@@ -15,7 +15,8 @@ pub struct Device {
 
 impl Device {
     pub fn from_path(path: PathBuf) -> Result<Device> {
-        let d = evdev::Device::open(&path)?;
+        let mut d = evdev::Device::open(&path)?;
+        d.grab()?;
         Ok(Device {
             inner: d.into_event_stream()?,
         })
@@ -28,9 +29,9 @@ impl Device {
         })
     }
 
-    pub fn new_uinput_device(&self) -> Result<UInputDevice> {
+    pub fn new_uinput_device(&self, name: String) -> Result<UInputDevice> {
         let mut vdb = uinput::VirtualDeviceBuilder::new()?;
-        vdb = vdb.name("meow");
+        vdb = vdb.name(&name);
         if let Some(sks) = self.inner.device().supported_keys() {
             vdb = vdb.with_keys(sks)?;
         } else {

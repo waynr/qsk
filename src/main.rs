@@ -35,7 +35,7 @@ async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
     let input_events_file = matches.value_of_t("device-file")?;
 
     let myd = Device::from_path(input_events_file)?;
-    let ui = myd.new_uinput_device()?;
+    let ui = myd.new_uinput_device(String::from("qsk-keyboard"))?;
 
     let mut engine = QSKEngine::new(Box::new(Passthrough{}));
     if !matches.is_present("passthrough") {
