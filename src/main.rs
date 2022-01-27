@@ -74,7 +74,7 @@ async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
     Ok(())
 }
 
-fn listen(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
+async fn listen(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
     let input_events_file = matches.value_of_t("device-file")?;
     let myd = Device::from_path(input_events_file)?;
     let mut listener = StdoutListener::from_device(myd);
@@ -88,7 +88,9 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     match matches.subcommand() {
         Some(("list-devices", _)) => linux::Device::list()?,
-        Some(("listen", submatches)) => listen(submatches)?,
+        Some(("listen", submatches)) => {
+            task::block_on(Compat::new( listen(submatches)))?
+        },
         Some(("remap", submatches)) => task::block_on(Compat::new(remap(submatches)))?,
         _ => (),
     };
