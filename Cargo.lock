@@ -3,6 +3,19 @@
 version = 3
 
 [[package]]
+name = "async-compat"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9b48b4ff0c2026db683dea961cd8ea874737f56cffca86fa84415eaddc51c00d"
+dependencies = [
+ "futures-core",
+ "futures-io",
+ "once_cell",
+ "pin-project-lite 0.2.8",
+ "tokio",
+]
+
+[[package]]
 name = "async-std"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -756,6 +769,7 @@ dependencies = [
 name = "quantum-soft-keyboard"
 version = "0.1.0"
 dependencies = [
+ "async-compat",
  "async-std",
  "clap",
  "evdev",
