@@ -43,7 +43,6 @@ async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
     sleep(Duration::from_millis(300));
 
     let myd = Device::from_path(input_events_file)?;
-    //let ui = myd.new_uinput_device(String::from("qsk-keyboard"))?;
     let ui = myd.new_uinput_device()?;
 
 
