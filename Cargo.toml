@@ -33,6 +33,7 @@ num-derive = "~0.3"
 num-traits = "~0.2"
 
 # device
+evdev-rs = "0.4"
 #evdev = "~0.11"
 evdev = { path = "../evdev", features = ["tokio"]}
 futures = "~0.3"

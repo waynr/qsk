@@ -8,7 +8,7 @@ use clap::ArgMatches;
 mod cli;
 use cli::get_clap_app;
 
-use qsk::device::linux;
+use qsk::device::linux_evdev;
 use qsk::device::linux::Device;
 use qsk::engine::QSKEngine;
 use qsk::events::KeyCode::*;
@@ -35,7 +35,9 @@ async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
     let input_events_file = matches.value_of_t("device-file")?;
 
     let myd = Device::from_path(input_events_file)?;
-    let ui = myd.new_uinput_device(String::from("qsk-keyboard"))?;
+    //let ui = myd.new_uinput_device(String::from("qsk-keyboard"))?;
+    let ui = myd.new_uinput_device()?;
+
 
     let mut engine = QSKEngine::new(Box::new(Passthrough{}));
     if !matches.is_present("passthrough") {
@@ -87,11 +89,11 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let matches = get_clap_app()?;
 
     match matches.subcommand() {
-        Some(("list-devices", _)) => linux::Device::list()?,
         Some(("listen", submatches)) => {
             task::block_on(Compat::new( listen(submatches)))?
         },
-        Some(("remap", submatches)) => task::block_on(Compat::new(remap(submatches)))?,
+        Some(("list-devices", _)) => linux_evdev::Device::list()?,
+        Some(("remap", submatches)) => task::block_on(remap(submatches))?,
         _ => (),
     };
     Ok(())
