@@ -14,7 +14,7 @@ use serde::{
         Serializer, SerializeSeq,
     },
 };
-use serde_yaml;
+use serde_json;
 use log::error;
 
 use crate::layers::{
@@ -46,9 +46,9 @@ impl Recorder {
 
     pub async fn record(&mut self, p: PathBuf) -> std::result::Result<(), Box<dyn std::error::Error>> {
         let file = File::create(p)?;
-        let file = LineWriter::new(file);
+        let file = LineWriter::with_capacity(1, file);
 
-        let mut ser = serde_yaml::Serializer::new(file);
+        let mut ser = serde_json::Serializer::new(file);
         let mut seq = ser.serialize_seq(None)?;
         while let Some(ie) = self.receiver.next().await {
             seq.serialize_element(&ie)?;
