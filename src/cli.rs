@@ -15,6 +15,12 @@ pub fn get_clap_app() -> Result<ArgMatches, Box<dyn std::error::Error>> {
                 .help("Use passthrough mapper (for debugging purposes)"),
         )
         .arg(
+            Arg::new("log-keys-to")
+                .long("log-keys-to")
+                .takes_value(true)
+                .help("Enables keylogging to specified file (for testing purposes)."),
+        )
+        .arg(
             Arg::new("device-file")
                 .help("Input events file")
                 .takes_value(true)

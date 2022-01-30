@@ -23,6 +23,8 @@ fern = "~0.5" # log implementation
 
 # logging
 log = "~0.4"
+serde = {version = "~1.0", features = ["derive"]}
+serde_yaml = "~0.8"
 
 # errors
 thiserror = "1.0"

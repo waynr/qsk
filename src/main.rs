@@ -3,6 +3,7 @@ use std::thread::sleep;
 use std::time::Duration;
 
 use async_std::task;
+use async_std::prelude::FutureExt;
 use async_compat::Compat;
 use maplit::hashmap;
 use clap::ArgMatches;
@@ -19,7 +20,9 @@ use qsk::layers::tap_toggle;
 use qsk::layers::Layer;
 use qsk::layers::LayerComposer;
 use qsk::layers::Passthrough;
+use qsk::layers::InputTransformer;
 use qsk::listener::StdoutListener;
+use qsk::recorder::Recorder;
 
 #[derive(Clone, Debug, PartialEq, Copy)]
 enum LAYERS {
@@ -45,8 +48,8 @@ async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
     let myd = Device::from_path(input_events_file)?;
     let ui = myd.new_uinput_device()?;
 
-
-    let mut engine = QSKEngine::new(Box::new(Passthrough{}));
+    let mut transformer: Box<dyn InputTransformer+ Send>;
+    transformer = Box::new(Passthrough{});
     if !matches.is_present("passthrough") {
         let mut layers = Vec::with_capacity(8);
         layers.insert(
@@ -74,11 +77,19 @@ async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
                 false,
             ),
         );
-        let composer = LayerComposer::from_layers(layers);
-        engine = QSKEngine::new(Box::new(composer));
+        transformer = Box::new(LayerComposer::from_layers(layers));
     }
 
-    engine.run(Box::new(myd), Box::new(ui)).await?;
+    if let Some(path) = matches.value_of("log-keys-to") {
+        let (mut recorder, listener) = Recorder::wrap(transformer);
+        let engine = QSKEngine::new(Box::new(listener));
+        let engine_task = engine.run(Box::new(myd), Box::new(ui));
+        let recorder_task = recorder.record(path.into());
+        engine_task.race(recorder_task).await?
+    } else {
+        let engine = QSKEngine::new(transformer);
+        engine.run(Box::new(myd), Box::new(ui)).await?;
+    }
 
     Ok(())
 }

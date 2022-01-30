@@ -1,6 +1,7 @@
 use std::time::SystemTime;
 
 use num_derive::{FromPrimitive, ToPrimitive};
+use serde::{Serialize, Deserialize};
 
 use crate::errors::Result;
 
@@ -10,14 +11,14 @@ use crate::errors::Result;
 /// primary concern of qsk initially and synchronization needs to be represented. Abstracting away
 /// from Linux-specific event handling in this way will enable us to support input event systems
 /// for other OSes in the future.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct InputEvent {
     pub time: SystemTime,
     pub code: EventCode,
     pub state: KeyState,
 }
 
-#[derive(FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[allow(dead_code)]
 pub enum KeyState {
     Up = 0,
@@ -26,7 +27,7 @@ pub enum KeyState {
     NotImplemented = 3,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum EventCode {
     KeyCode(KeyCode),
     SynCode(SynCode),
@@ -35,7 +36,7 @@ pub enum EventCode {
 /// Copied and pasted from evdev-rs 0.3.1 with s/KEY_/KC_/ to align more closely with QMK naming
 /// key code naming conventions.
 #[allow(non_camel_case_types)]
-#[derive(FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[allow(dead_code)]
 pub enum KeyCode {
     KC_RESERVED = 0,
@@ -479,7 +480,7 @@ pub enum KeyCode {
     NotImplemented = 768,
 }
 
-#[derive(FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum SynCode {
     Report = 0,
     Config = 1,

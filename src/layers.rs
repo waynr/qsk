@@ -1,12 +1,14 @@
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
+use serde::{Serialize, Deserialize};
+
 use crate::events as event;
 use crate::events::{
     EventCode, KeyCode::*, KeyState::*,
 };
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub enum ControlCode {
     InputEvent(event::InputEvent),
     KeyMap(event::KeyCode),
