@@ -48,7 +48,7 @@ impl Recorder {
         let file = File::create(p)?;
         let file = LineWriter::with_capacity(1, file);
 
-        let mut ser = serde_json::Serializer::new(file);
+        let mut ser = serde_json::Serializer::pretty(file);
         let mut seq = ser.serialize_seq(None)?;
         while let Some(ie) = self.receiver.next().await {
             seq.serialize_element(&ie)?;
