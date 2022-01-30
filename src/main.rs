@@ -15,12 +15,9 @@ use qsk::device::linux_evdev;
 use qsk::device::linux::Device;
 use qsk::engine::QSKEngine;
 use qsk::events::KeyCode::*;
-use qsk::layers::key;
-use qsk::layers::tap_toggle;
-use qsk::layers::Layer;
-use qsk::layers::LayerComposer;
-use qsk::layers::Passthrough;
-use qsk::layers::InputTransformer;
+use qsk::layers::{
+    key, tap_toggle, ControlCode, Layer, LayerComposer, Passthrough, InputTransformer,
+};
 use qsk::listener::StdoutListener;
 use qsk::recorder::Recorder;
 
@@ -65,6 +62,7 @@ async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
             LAYERS::Navigation.into(),
             Layer::from_hashmap(
                 hashmap!(
+                    KC_END => vec![ControlCode::Exit],
                     KC_Y => key(KC_HOME),
                     KC_U => key(KC_PAGEDOWN),
                     KC_I => key(KC_PAGEUP),
