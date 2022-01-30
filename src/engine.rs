@@ -1,8 +1,8 @@
 use async_std::prelude::FutureExt;
 use async_std::prelude::StreamExt;
-use async_std::sync::channel;
-use async_std::sync::Receiver;
-use async_std::sync::Sender;
+use async_std::channel::unbounded;
+use async_std::channel::Receiver;
+use async_std::channel::Sender;
 use async_std::task;
 use log::debug;
 use log::trace;
@@ -36,7 +36,10 @@ impl QSKEngine {
                 for cc in e_vec.iter() {
                     match cc {
                         ControlCode::InputEvent(v) => {
-                            s.send(v.clone()).await;
+                            if let Err(e) = s.send(v.clone()).await {
+                                error!("error sending: {:?}", e);
+                                return;
+                            }
                             match e.code {
                                 EventCode::SynCode(_) => trace!("recv: {:?} {:?}", v.code, v.state),
                                 _ => debug!("send: {:?} {:?}", v.code, v.state),
@@ -55,8 +58,8 @@ impl QSKEngine {
         mut src: Box<dyn InputEventSource>,
         mut snk: Box<dyn InputEventSink>,
     ) -> std::result::Result<(), Box<dyn std::error::Error>> {
-        let (input_sender, handler_receiver) = channel(1);
-        let (handler_sender, mut output_receiver) = channel(1);
+        let (input_sender, handler_receiver) = unbounded();
+        let (handler_sender, mut output_receiver) = unbounded();
 
         trace!("creating handler task");
         let handler_task = task::Builder::new()
@@ -71,7 +74,15 @@ impl QSKEngine {
                     let t = src.recv();
                     trace!("received InputEvent from keyboard");
                     match t {
-                        Ok(a) => input_sender.send(a).await,
+                        Ok(a) => {
+                            match input_sender.send(a).await {
+                                Err(async_std::channel::SendError(msg)) => {
+                                    debug!("channel closed, failed to send: {:?}", msg);
+                                    break;
+                                },
+                                _ => (),
+                            }
+                        },
                         Err(err) => {
                             error!("error reading from keyboard device: {:?}", err)
                         },

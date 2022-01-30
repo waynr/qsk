@@ -1,9 +1,11 @@
 use thiserror;
+use async_std;
 
 use evdev_rs;
 use evdev;
 
 use crate::events;
+use crate::layers;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -17,6 +19,12 @@ pub enum Error {
 
     #[error("io error")]
     NoEvents,
+
+    #[error("async error")]
+    AsyncSendInputEvent(#[from] async_std::channel::SendError<events::InputEvent>),
+
+    #[error("async error")]
+    AsyncSendControlCode(#[from] async_std::channel::SendError<layers::ControlCode>),
 
     #[error("unrecognized InputEvent\n time: {:?}, code: {:?}, value: {:?}", .e.time, .e.code, .e.state)]
     UnrecognizedInputEvent{
