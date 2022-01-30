@@ -5,7 +5,7 @@ use evdev_rs;
 use evdev;
 
 use crate::events;
-use crate::layers;
+use crate::recorder;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -24,7 +24,7 @@ pub enum Error {
     AsyncSendInputEvent(#[from] async_std::channel::SendError<events::InputEvent>),
 
     #[error("async error")]
-    AsyncSendControlCode(#[from] async_std::channel::SendError<layers::ControlCode>),
+    AsyncSendLog(#[from] async_std::channel::SendError<recorder::Log>),
 
     #[error("unrecognized InputEvent\n time: {:?}, code: {:?}, value: {:?}", .e.time, .e.code, .e.state)]
     UnrecognizedInputEvent{
