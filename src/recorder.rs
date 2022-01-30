@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::io::LineWriter;
 
 use async_std::prelude::StreamExt;
-use async_std::channel::bounded;
+use async_std::channel::unbounded;
 use async_std::channel::Receiver;
 use async_std::channel::Sender;
 use async_std::task::block_on;
@@ -35,7 +35,7 @@ pub struct Recorder{
 
 impl Recorder {
     pub fn wrap(it: Box<dyn InputTransformer + Send>) -> (Self, Listener) {
-        let (sender, receiver) = bounded(1);
+        let (sender, receiver) = unbounded();
         (Recorder{
             receiver,
         }, Listener {
