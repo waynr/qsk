@@ -1,12 +1,12 @@
-use async_std::prelude::FutureExt;
-use async_std::prelude::StreamExt;
 use async_std::channel::unbounded;
 use async_std::channel::Receiver;
 use async_std::channel::Sender;
+use async_std::prelude::FutureExt;
+use async_std::prelude::StreamExt;
 use async_std::task;
 use log::debug;
-use log::trace;
 use log::error;
+use log::trace;
 
 use crate::events::EventCode;
 use crate::events::InputEvent;
@@ -44,7 +44,7 @@ impl QSKEngine {
                                 EventCode::SynCode(_) => trace!("recv: {:?} {:?}", v.code, v.state),
                                 _ => debug!("send: {:?} {:?}", v.code, v.state),
                             };
-                        },
+                        }
                         ControlCode::Exit => return,
                         _ => continue,
                     }
@@ -74,18 +74,16 @@ impl QSKEngine {
                     let t = src.recv();
                     trace!("received InputEvent from keyboard");
                     match t {
-                        Ok(a) => {
-                            match input_sender.send(a).await {
-                                Err(async_std::channel::SendError(msg)) => {
-                                    debug!("channel closed, failed to send: {:?}", msg);
-                                    break;
-                                },
-                                _ => (),
+                        Ok(a) => match input_sender.send(a).await {
+                            Err(async_std::channel::SendError(msg)) => {
+                                debug!("channel closed, failed to send: {:?}", msg);
+                                break;
                             }
+                            _ => (),
                         },
                         Err(err) => {
                             error!("error reading from keyboard device: {:?}", err)
-                        },
+                        }
                     }
                     trace!("sent InputEvent to handler");
                 }

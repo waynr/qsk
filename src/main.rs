@@ -2,21 +2,22 @@ use std::error;
 use std::thread::sleep;
 use std::time::Duration;
 
-use async_std::task;
-use async_std::prelude::FutureExt;
 use async_compat::Compat;
-use maplit::hashmap;
+use async_std::prelude::FutureExt;
+use async_std::task;
 use clap::ArgMatches;
+use ctrlc;
+use maplit::hashmap;
 
 mod cli;
 use cli::get_clap_app;
 
-use qsk::device::linux_evdev;
 use qsk::device::linux::Device;
+use qsk::device::linux_evdev;
 use qsk::engine::QSKEngine;
 use qsk::events::KeyCode::*;
 use qsk::layers::{
-    key, tap_toggle, ControlCode, Layer, LayerComposer, Passthrough, InputTransformer,
+    key, tap_toggle, ControlCode, InputTransformer, Layer, LayerComposer, Passthrough,
 };
 use qsk::listener::StdoutListener;
 use qsk::recorder::Recorder;
@@ -45,8 +46,8 @@ async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
     let myd = Device::from_path(input_events_file)?;
     let ui = myd.new_uinput_device()?;
 
-    let mut transformer: Box<dyn InputTransformer+ Send>;
-    transformer = Box::new(Passthrough{});
+    let mut transformer: Box<dyn InputTransformer + Send>;
+    transformer = Box::new(Passthrough {});
     if !matches.is_present("passthrough") {
         let mut layers = Vec::with_capacity(8);
         layers.insert(
@@ -105,9 +106,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let matches = get_clap_app()?;
 
     match matches.subcommand() {
-        Some(("listen", submatches)) => {
-            task::block_on(Compat::new( listen(submatches)))?
-        },
+        Some(("listen", submatches)) => task::block_on(Compat::new(listen(submatches)))?,
         Some(("list-devices", _)) => linux_evdev::Device::list()?,
         Some(("remap", submatches)) => task::block_on(remap(submatches))?,
         _ => (),

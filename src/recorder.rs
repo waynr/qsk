@@ -1,27 +1,23 @@
 use std::fs::File;
-use std::path::PathBuf;
 use std::io::LineWriter;
+use std::path::PathBuf;
 
-use async_std::prelude::StreamExt;
 use async_std::channel::unbounded;
 use async_std::channel::Receiver;
 use async_std::channel::Sender;
+use async_std::prelude::StreamExt;
 use async_std::task::block_on;
 
+use log::error;
 use serde::{
-    Serialize, Deserialize,
-    ser::{
-        Serializer, SerializeSeq,
-    },
+    ser::{SerializeSeq, Serializer},
+    Deserialize, Serialize,
 };
 use serde_json;
-use log::error;
 
-use crate::layers::{
-    InputTransformer, ControlCode,
-};
-use crate::events::InputEvent;
 use crate::errors::Result;
+use crate::events::InputEvent;
+use crate::layers::{ControlCode, InputTransformer};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Log {
@@ -29,22 +25,20 @@ pub enum Log {
     Out(ControlCode),
 }
 
-pub struct Recorder{
+pub struct Recorder {
     receiver: Receiver<Log>,
 }
 
 impl Recorder {
     pub fn wrap(it: Box<dyn InputTransformer + Send>) -> (Self, Listener) {
         let (sender, receiver) = unbounded();
-        (Recorder{
-            receiver,
-        }, Listener {
-            inner: it,
-            sender,
-        })
+        (Recorder { receiver }, Listener { inner: it, sender })
     }
 
-    pub async fn record(&mut self, p: PathBuf) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    pub async fn record(
+        &mut self,
+        p: PathBuf,
+    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
         let file = File::create(p)?;
         let file = LineWriter::with_capacity(1, file);
 
@@ -56,10 +50,9 @@ impl Recorder {
         seq.end()?;
         Ok(())
     }
-
 }
 
-pub struct Listener{
+pub struct Listener {
     inner: Box<dyn InputTransformer + Send>,
     sender: Sender<Log>,
 }

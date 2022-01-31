@@ -1,13 +1,13 @@
+use futures::executor::block_on;
 use std::convert::TryFrom;
 use std::path::PathBuf;
-use futures::executor::block_on;
 
 use evdev;
 use evdev::uinput;
 
 use crate::errors::{Error, Result};
 use crate::events as event;
-use crate::events::{InputEvent, EventCode, SynCode, KeyCode};
+use crate::events::{EventCode, InputEvent, KeyCode, SynCode};
 
 pub struct Device {
     inner: evdev::EventStream,
@@ -48,12 +48,15 @@ impl Device {
                 let mut key_count = 0;
                 for _key in keys.iter() {
                     //println!("  key: {:?}", key);
-                    key_count+=1;
+                    key_count += 1;
                 }
                 if key_count > 100 {
                     println!("{}", dev.name().unwrap_or("unknown"));
                     println!("  key_count: {}", key_count);
-                    println!("  physical path: {}", dev.physical_path().unwrap_or("unknown"));
+                    println!(
+                        "  physical path: {}",
+                        dev.physical_path().unwrap_or("unknown")
+                    );
                     println!("  system path: {}", path.display());
                 }
             }
@@ -73,25 +76,23 @@ impl TryFrom<evdev::InputEvent> for InputEvent {
                     Some(code) => Some(EventCode::KeyCode(code)),
                     None => None,
                 }
-            },
+            }
             evdev::EventType::SYNCHRONIZATION => {
                 let kc: Option<SynCode> = num::FromPrimitive::from_u16(ev.code() as u16);
                 match kc {
                     Some(code) => Some(EventCode::SynCode(code)),
                     None => None,
                 }
-            },
+            }
             _ => None,
         };
         match ec {
-            Some(code) => Ok(event::InputEvent{
+            Some(code) => Ok(event::InputEvent {
                 time: ev.timestamp(),
                 code,
                 state: i32_into_ks(ev.value()),
             }),
-            None => Err(Error::UnrecognizedEvdevInputEvent{
-                e: ev,
-            }),
+            None => Err(Error::UnrecognizedEvdevInputEvent { e: ev }),
         }
     }
 }
@@ -104,11 +105,7 @@ impl TryFrom<InputEvent> for evdev::InputEvent {
             EventCode::KeyCode(c) => (evdev::EventType::SYNCHRONIZATION, c as i16),
             EventCode::SynCode(c) => (evdev::EventType::KEY, c as i16),
         };
-        Ok(evdev::InputEvent::new(
-            ty,
-            code as u16,
-            ie.state as i32,
-        ))
+        Ok(evdev::InputEvent::new(ty, code as u16, ie.state as i32))
     }
 }
 

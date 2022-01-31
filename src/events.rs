@@ -1,7 +1,7 @@
 use std::time::SystemTime;
 
 use num_derive::{FromPrimitive, ToPrimitive};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::errors::Result;
 
@@ -18,7 +18,9 @@ pub struct InputEvent {
     pub state: KeyState,
 }
 
-#[derive(Serialize, Deserialize, FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(
+    Serialize, Deserialize, FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash,
+)]
 #[allow(dead_code)]
 pub enum KeyState {
     Up = 0,
@@ -36,7 +38,9 @@ pub enum EventCode {
 /// Copied and pasted from evdev-rs 0.3.1 with s/KEY_/KC_/ to align more closely with QMK naming
 /// key code naming conventions.
 #[allow(non_camel_case_types)]
-#[derive(Serialize, Deserialize, FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(
+    Serialize, Deserialize, FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash,
+)]
 #[allow(dead_code)]
 pub enum KeyCode {
     KC_RESERVED = 0,
@@ -480,7 +484,9 @@ pub enum KeyCode {
     NotImplemented = 768,
 }
 
-#[derive(Serialize, Deserialize, FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(
+    Serialize, Deserialize, FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash,
+)]
 pub enum SynCode {
     Report = 0,
     Config = 1,

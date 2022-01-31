@@ -15,7 +15,7 @@ use crate::errors::Error;
 use crate::errors::Result;
 
 use crate::events as event;
-use crate::events::{InputEvent, EventCode, SynCode, KeyCode};
+use crate::events::{EventCode, InputEvent, KeyCode, SynCode};
 
 pub struct Device {
     inner: Arc<Mutex<evdev_rs::Device>>,
@@ -34,30 +34,24 @@ impl TryFrom<evdev_rs::InputEvent> for InputEvent {
                     Some(code) => Some(EventCode::KeyCode(code)),
                     None => None,
                 }
-            },
+            }
             enums::EventCode::EV_SYN(ref ec) => {
                 let sc: Option<SynCode> = num::FromPrimitive::from_u16(ec.clone() as u16);
                 match sc {
                     Some(code) => Some(EventCode::SynCode(code)),
                     None => None,
                 }
-            },
+            }
             _ => None,
         };
         match c {
-            Some(code) => {
-                Ok(event::InputEvent {
-                    time: UNIX_EPOCH
-                        + Duration::new(ev.time.tv_sec as u64, ev.time.tv_usec as u32 * 1000 as u32),
-                    code,
-                    state: i32_into_ks(ev.value),
-                })
-            },
-            None => {
-                Err(Error::UnrecognizedEvdevRSInputEvent{
-                    e: ev,
-                })
-            }
+            Some(code) => Ok(event::InputEvent {
+                time: UNIX_EPOCH
+                    + Duration::new(ev.time.tv_sec as u64, ev.time.tv_usec as u32 * 1000 as u32),
+                code,
+                state: i32_into_ks(ev.value),
+            }),
+            None => Err(Error::UnrecognizedEvdevRSInputEvent { e: ev }),
         }
     }
 }
@@ -67,19 +61,14 @@ impl TryFrom<InputEvent> for evdev_rs::InputEvent {
 
     fn try_from(ie: InputEvent) -> Result<evdev_rs::InputEvent> {
         let c = match ie.code {
-            EventCode::KeyCode(c) => {
-                match enums::int_to_ev_key(c as u32) {
-                    Some(key) => Some(enums::EventCode::EV_KEY(key)),
-                    None => None,
-                }
-            }
-            EventCode::SynCode(c) => {
-                match enums::int_to_ev_syn(c as u32) {
-                    Some(key) => Some(enums::EventCode::EV_SYN(key)),
-                    None => None,
-                }
-            }
-
+            EventCode::KeyCode(c) => match enums::int_to_ev_key(c as u32) {
+                Some(key) => Some(enums::EventCode::EV_KEY(key)),
+                None => None,
+            },
+            EventCode::SynCode(c) => match enums::int_to_ev_syn(c as u32) {
+                Some(key) => Some(enums::EventCode::EV_SYN(key)),
+                None => None,
+            },
         };
 
         let d = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
@@ -92,9 +81,7 @@ impl TryFrom<InputEvent> for evdev_rs::InputEvent {
                 event_code,
                 value: ie.state as i32,
             }),
-            None => Err(Error::UnrecognizedInputEvent{
-                e: ie,
-            }),
+            None => Err(Error::UnrecognizedInputEvent { e: ie }),
         }
     }
 }
@@ -136,12 +123,10 @@ impl event::InputEventSource for Device {
             }
         };
         match guard.next_event(evdev_rs::ReadFlag::NORMAL | evdev_rs::ReadFlag::BLOCKING) {
-            Ok(ev) => {
-                match InputEvent::try_from(ev.1) {
-                    Ok(ie) => Ok(ie),
-                    Err(e) => Err(e),
-                }
-            }
+            Ok(ev) => match InputEvent::try_from(ev.1) {
+                Ok(ie) => Ok(ie),
+                Err(e) => Err(e),
+            },
             Err(e) => Err(Error::IO(e)),
         }
     }

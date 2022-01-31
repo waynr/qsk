@@ -37,8 +37,8 @@ pub fn get_clap_app() -> Result<ArgMatches, Box<dyn std::error::Error>> {
         )
         .about("listen to and print events stdout");
 
-    let list_devices = App::new("list-devices")
-        .about("list keyboard-type devices available for remapping");
+    let list_devices =
+        App::new("list-devices").about("list keyboard-type devices available for remapping");
 
     let matches = App::new("quantum soft keyboard")
         .arg(
@@ -47,9 +47,14 @@ pub fn get_clap_app() -> Result<ArgMatches, Box<dyn std::error::Error>> {
                 .multiple_occurrences(true)
                 .help("increases the verbosity level"),
         )
-        .arg(Arg::new("quiet").short('q').multiple_occurrences(true).help(
-            "decreases the verbosity level; once suppresses warnings, twice suppresses errors.",
-        ))
+        .arg(
+            Arg::new("quiet")
+                .short('q')
+                .multiple_occurrences(true)
+                .help(
+                "decreases the verbosity level; once suppresses warnings, twice suppresses errors.",
+            ),
+        )
         .version("0.0")
         .author("Wayne Warren <wayne.warren.s@gmail.com>")
         .about("The keyboard remapping software you never knew you wanted.")

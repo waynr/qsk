@@ -1,8 +1,8 @@
-use thiserror;
 use async_std;
+use thiserror;
 
-use evdev_rs;
 use evdev;
+use evdev_rs;
 
 use crate::events;
 use crate::recorder;
@@ -27,19 +27,13 @@ pub enum Error {
     AsyncSendLog(#[from] async_std::channel::SendError<recorder::Log>),
 
     #[error("unrecognized InputEvent\n time: {:?}, code: {:?}, value: {:?}", .e.time, .e.code, .e.state)]
-    UnrecognizedInputEvent{
-        e: events::InputEvent,
-    },
+    UnrecognizedInputEvent { e: events::InputEvent },
 
     #[error("unrecognized evdev::InputEvent:\n time: {:?}, code: {:?}, value: {:?}", .e.timestamp(), .e.code(), .e.value())]
-    UnrecognizedEvdevInputEvent{
-        e: evdev::InputEvent,
-    },
+    UnrecognizedEvdevInputEvent { e: evdev::InputEvent },
 
     #[error("unrecognized evdev_rs::InputEvent:\n time: {:?}, type: {:?}, code: {:?}, value: {:?}", .e.time, .e.event_type(), .e.event_code, .e.value)]
-    UnrecognizedEvdevRSInputEvent{
-        e: evdev_rs::InputEvent,
-    },
+    UnrecognizedEvdevRSInputEvent { e: evdev_rs::InputEvent },
 
     #[error("time error")]
     SystemTimeError(#[from] std::time::SystemTimeError),

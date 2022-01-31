@@ -1,12 +1,10 @@
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::events as event;
-use crate::events::{
-    EventCode, KeyCode::*, KeyState::*,
-};
+use crate::events::{EventCode, KeyCode::*, KeyState::*};
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub enum ControlCode {
@@ -21,10 +19,8 @@ pub struct Passthrough {}
 impl InputTransformer for Passthrough {
     fn transform(&mut self, e: event::InputEvent) -> Option<Vec<ControlCode>> {
         match e.code {
-           EventCode::KeyCode(KC_PAUSE) => Some(vec![ControlCode::Exit]),
-            _ => {
-                Some(vec![ControlCode::InputEvent(e)])
-            }
+            EventCode::KeyCode(KC_PAUSE) => Some(vec![ControlCode::Exit]),
+            _ => Some(vec![ControlCode::InputEvent(e)]),
         }
     }
 }
@@ -42,9 +38,12 @@ impl Layer {
     pub fn from_hashmap(map: HashMap<event::KeyCode, Vec<ControlCode>>, active: bool) -> Layer {
         let mut new_map = HashMap::with_capacity(map.len());
         map.iter().for_each(|(k, v)| {
-                new_map.insert(EventCode::KeyCode(*k), v.clone());
-            });
-        Layer { map: new_map, active }
+            new_map.insert(EventCode::KeyCode(*k), v.clone());
+        });
+        Layer {
+            map: new_map,
+            active,
+        }
     }
 
     fn transform(&mut self, e: event::InputEvent) -> Option<Vec<ControlCode>> {
@@ -207,10 +206,10 @@ mod layer_composer {
     use std::sync::{Arc, Mutex};
     use std::time::SystemTime;
 
-    use maplit::hashmap;
     use galvanic_assert::matchers::collection::*;
     use galvanic_assert::matchers::*;
     use galvanic_assert::*;
+    use maplit::hashmap;
 
     use super::*;
 
@@ -223,11 +222,7 @@ mod layer_composer {
             }
         }
 
-        fn validate_single(
-            &mut self,
-            input: event::InputEvent,
-            output: Option<event::InputEvent>,
-        ) {
+        fn validate_single(&mut self, input: event::InputEvent, output: Option<event::InputEvent>) {
             let result = self.transform(input);
             match output {
                 None => assert_that!(&result, eq(None)),
@@ -309,12 +304,15 @@ mod layer_composer {
         );
 
         let fake_now = FakeNow::new();
-        (LayerComposer {
-            base: Box::new(Passthrough {}),
-            layers,
-            timers: HashMap::new(),
-            nower: Box::new(fake_now.clone()),
-        }, fake_now)
+        (
+            LayerComposer {
+                base: Box::new(Passthrough {}),
+                layers,
+                timers: HashMap::new(),
+                nower: Box::new(fake_now.clone()),
+            },
+            fake_now,
+        )
     }
 
     #[test]
@@ -431,10 +429,7 @@ mod layer_composer {
         up.time = down.time + Duration::from_micros(1);
         expected.push(ControlCode::InputEvent(down));
         expected.push(ControlCode::InputEvent(up));
-        th.validate_multiple(
-            th.key(KC_F, Up),
-            expected,
-        );
+        th.validate_multiple(th.key(KC_F, Up), expected);
     }
 
     #[test]
