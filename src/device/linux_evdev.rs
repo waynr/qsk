@@ -6,8 +6,11 @@ use evdev;
 use evdev::uinput;
 
 use crate::errors::{Error, Result};
-use crate::events::{EventCode, InputEvent, KeyCode, KeyState, SynCode};
+use crate::events;
+use crate::events::{EventCode, KeyCode, KeyState, SynCode};
 use crate::device::traits::{InputEventSink, InputEventSource};
+
+pub struct InputEvent(events::InputEvent);
 
 pub struct Device {
     inner: evdev::EventStream,
@@ -87,11 +90,11 @@ impl TryFrom<evdev::InputEvent> for InputEvent {
             _ => None,
         };
         match ec {
-            Some(code) => Ok(InputEvent {
+            Some(code) => Ok(InputEvent( events::InputEvent {
                 time: ev.timestamp(),
                 code,
                 state: i32_into_ks(ev.value()),
-            }),
+            })),
             None => Err(Error::UnrecognizedEvdevInputEvent { e: ev }),
         }
     }
@@ -101,18 +104,18 @@ impl TryFrom<InputEvent> for evdev::InputEvent {
     type Error = Error;
 
     fn try_from(ie: InputEvent) -> Result<evdev::InputEvent> {
-        let (ty, code) = match ie.code {
+        let (ty, code) = match ie.0.code {
             EventCode::KeyCode(c) => (evdev::EventType::SYNCHRONIZATION, c as i16),
             EventCode::SynCode(c) => (evdev::EventType::KEY, c as i16),
         };
-        Ok(evdev::InputEvent::new(ty, code as u16, ie.state as i32))
+        Ok(evdev::InputEvent::new(ty, code as u16, ie.0.state as i32))
     }
 }
 
 impl InputEventSource for Device {
-    fn recv(&mut self) -> Result<InputEvent> {
+    fn recv(&mut self) -> Result<events::InputEvent> {
         let ev = block_on(self.inner.next_event())?;
-        Ok(InputEvent::try_from(ev)?)
+        Ok(InputEvent::try_from(ev)?.0)
     }
 }
 
@@ -130,8 +133,8 @@ pub struct UInputDevice {
 }
 
 impl InputEventSink for UInputDevice {
-    fn send(&mut self, ie: InputEvent) -> Result<()> {
-        let evdev_ie = evdev::InputEvent::try_from(ie)?;
+    fn send(&mut self, ie: events::InputEvent) -> Result<()> {
+        let evdev_ie = evdev::InputEvent::try_from(InputEvent(ie))?;
         self.inner.emit(&[evdev_ie])?;
         Ok(())
     }

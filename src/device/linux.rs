@@ -14,8 +14,11 @@ use log::error;
 use crate::errors::Error;
 use crate::errors::Result;
 
-use crate::events::{EventCode, InputEvent, KeyCode, KeyState, SynCode};
+use crate::events;
+use crate::events::{EventCode, KeyCode, KeyState, SynCode};
 use crate::device::traits::{InputEventSink, InputEventSource};
+
+pub struct InputEvent(events::InputEvent);
 
 pub struct Device {
     inner: Arc<Mutex<evdev_rs::Device>>,
@@ -45,12 +48,12 @@ impl TryFrom<evdev_rs::InputEvent> for InputEvent {
             _ => None,
         };
         match c {
-            Some(code) => Ok(InputEvent {
+            Some(code) => Ok(InputEvent(events::InputEvent {
                 time: UNIX_EPOCH
                     + Duration::new(ev.time.tv_sec as u64, ev.time.tv_usec as u32 * 1000 as u32),
                 code,
                 state: i32_into_ks(ev.value),
-            }),
+            })),
             None => Err(Error::UnrecognizedEvdevRSInputEvent { e: ev }),
         }
     }
@@ -60,7 +63,7 @@ impl TryFrom<InputEvent> for evdev_rs::InputEvent {
     type Error = Error;
 
     fn try_from(ie: InputEvent) -> Result<evdev_rs::InputEvent> {
-        let c = match ie.code {
+        let c = match ie.0.code {
             EventCode::KeyCode(c) => match enums::int_to_ev_key(c as u32) {
                 Some(key) => Some(enums::EventCode::EV_KEY(key)),
                 None => None,
@@ -79,9 +82,9 @@ impl TryFrom<InputEvent> for evdev_rs::InputEvent {
                     tv_usec: d.subsec_micros() as i64,
                 },
                 event_code,
-                value: ie.state as i32,
+                value: ie.0.state as i32,
             }),
-            None => Err(Error::UnrecognizedInputEvent { e: ie }),
+            None => Err(Error::UnrecognizedInputEvent { e: ie.0 }),
         }
     }
 }
@@ -113,7 +116,7 @@ impl Device {
 }
 
 impl InputEventSource for Device {
-    fn recv(&mut self) -> Result<InputEvent> {
+    fn recv(&mut self) -> Result<events::InputEvent> {
         let guard = match self.inner.lock() {
             Ok(a) => a,
             Err(p_err) => {
@@ -124,7 +127,7 @@ impl InputEventSource for Device {
         };
         match guard.next_event(evdev_rs::ReadFlag::NORMAL | evdev_rs::ReadFlag::BLOCKING) {
             Ok(ev) => match InputEvent::try_from(ev.1) {
-                Ok(ie) => Ok(ie),
+                Ok(ie) => Ok(ie.0),
                 Err(e) => Err(e),
             },
             Err(e) => Err(Error::IO(e)),
@@ -139,7 +142,7 @@ pub struct UInputDevice {
 unsafe impl Send for UInputDevice {}
 
 impl InputEventSink for UInputDevice {
-    fn send(&mut self, e: InputEvent) -> Result<()> {
+    fn send(&mut self, e: events::InputEvent) -> Result<()> {
         let guard = match self.inner.lock() {
             Ok(a) => a,
             Err(p_err) => {
@@ -149,7 +152,7 @@ impl InputEventSink for UInputDevice {
             }
         };
 
-        let ie = evdev_rs::InputEvent::try_from(e)?;
+        let ie = evdev_rs::InputEvent::try_from(InputEvent(e))?;
         match guard.write_event(&ie) {
             Ok(_) => (),
             Err(e) => return Err(Error::IO(e)),
