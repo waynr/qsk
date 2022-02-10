@@ -8,11 +8,11 @@ use log::debug;
 use log::error;
 use log::trace;
 
+use qsk_types::control_code::ControlCode;
 use crate::events::EventCode;
 use crate::events::InputEvent;
 use crate::device::traits::InputEventSink;
 use crate::device::traits::InputEventSource;
-use crate::layers::ControlCode;
 use crate::layers::InputTransformer;
 
 pub struct QSKEngine {

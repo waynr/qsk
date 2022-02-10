@@ -1,23 +1,13 @@
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
-use serde::{Deserialize, Serialize};
-
-use crate::events as event;
-use crate::events::{EventCode, KeyCode::*, KeyState::*};
-
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
-pub enum ControlCode {
-    InputEvent(event::InputEvent),
-    KeyMap(event::KeyCode),
-    TapToggle(usize, event::KeyCode),
-    Exit,
-}
+use qsk_types::control_code::ControlCode;
+use crate::events::{InputEvent, EventCode, KeyCode, KeyCode::*, KeyState::*};
 
 pub struct Passthrough {}
 
 impl InputTransformer for Passthrough {
-    fn transform(&mut self, e: event::InputEvent) -> Option<Vec<ControlCode>> {
+    fn transform(&mut self, e: InputEvent) -> Option<Vec<ControlCode>> {
         match e.code {
             EventCode::KeyCode(KC_PAUSE) => Some(vec![ControlCode::Exit]),
             _ => Some(vec![ControlCode::InputEvent(e)]),
@@ -26,7 +16,7 @@ impl InputTransformer for Passthrough {
 }
 
 pub trait InputTransformer {
-    fn transform(&mut self, e: event::InputEvent) -> Option<Vec<ControlCode>>;
+    fn transform(&mut self, e: InputEvent) -> Option<Vec<ControlCode>>;
 }
 
 pub struct Layer {
@@ -35,7 +25,7 @@ pub struct Layer {
 }
 
 impl Layer {
-    pub fn from_hashmap(map: HashMap<event::KeyCode, Vec<ControlCode>>, active: bool) -> Layer {
+    pub fn from_hashmap(map: HashMap<KeyCode, Vec<ControlCode>>, active: bool) -> Layer {
         let mut new_map = HashMap::with_capacity(map.len());
         map.iter().for_each(|(k, v)| {
             new_map.insert(EventCode::KeyCode(*k), v.clone());
@@ -46,7 +36,7 @@ impl Layer {
         }
     }
 
-    fn transform(&mut self, e: event::InputEvent) -> Option<Vec<ControlCode>> {
+    fn transform(&mut self, e: InputEvent) -> Option<Vec<ControlCode>> {
         match (self.map.get(&e.code), self.active) {
             (Some(ccs), true) => {
                 let mut output: Vec<ControlCode> = Vec::new();
@@ -83,16 +73,16 @@ impl Nower for RealNower {
 pub struct LayerComposer {
     base: Box<dyn InputTransformer + Send>,
     layers: Vec<Layer>,
-    timers: HashMap<event::KeyCode, SystemTime>,
+    timers: HashMap<KeyCode, SystemTime>,
 
     nower: Box<dyn Nower + Send>,
 }
 
-pub fn key(k: event::KeyCode) -> Vec<ControlCode> {
+pub fn key(k: KeyCode) -> Vec<ControlCode> {
     vec![ControlCode::KeyMap(k)]
 }
 
-pub fn tap_toggle(layer: usize, kc: event::KeyCode) -> Vec<ControlCode> {
+pub fn tap_toggle(layer: usize, kc: KeyCode) -> Vec<ControlCode> {
     vec![ControlCode::TapToggle(layer, kc)]
 }
 
@@ -117,16 +107,16 @@ impl LayerComposer {
         }
     }
 
-    fn key_up_and_down(&self, k: event::KeyCode) -> Vec<ControlCode> {
+    fn key_up_and_down(&self, k: KeyCode) -> Vec<ControlCode> {
         let now = self.now();
         let now_plus = now + Duration::from_micros(1);
         vec![
-            ControlCode::InputEvent(event::InputEvent {
+            ControlCode::InputEvent(InputEvent {
                 time: now,
                 code: EventCode::KeyCode(k),
                 state: Down,
             }),
-            ControlCode::InputEvent(event::InputEvent {
+            ControlCode::InputEvent(InputEvent {
                 time: now_plus,
                 code: EventCode::KeyCode(k),
                 state: Up,
@@ -136,7 +126,7 @@ impl LayerComposer {
 
     fn handle_control_codes(
         &mut self,
-        e: &event::InputEvent,
+        e: &InputEvent,
         ccs: Vec<ControlCode>,
     ) -> Option<Vec<ControlCode>> {
         let mut output: Vec<ControlCode> = Vec::new();
@@ -184,7 +174,7 @@ impl LayerComposer {
 }
 
 impl InputTransformer for LayerComposer {
-    fn transform(&mut self, e: event::InputEvent) -> Option<Vec<ControlCode>> {
+    fn transform(&mut self, e: InputEvent) -> Option<Vec<ControlCode>> {
         for l in &mut self.layers.iter_mut().rev() {
             match l.transform(e) {
                 Some(ccs) => return self.handle_control_codes(&e, ccs),
@@ -214,15 +204,15 @@ mod layer_composer {
     use super::*;
 
     impl LayerComposer {
-        fn key(&self, kc: event::KeyCode, ks: event::KeyState) -> event::InputEvent {
-            event::InputEvent {
+        fn key(&self, kc: KeyCode, ks: KeyState) -> InputEvent {
+            InputEvent {
                 time: self.nower.now(),
                 code: EventCode::KeyCode(kc),
                 state: ks,
             }
         }
 
-        fn validate_single(&mut self, input: event::InputEvent, output: Option<event::InputEvent>) {
+        fn validate_single(&mut self, input: InputEvent, output: Option<InputEvent>) {
             let result = self.transform(input);
             match output {
                 None => assert_that!(&result, eq(None)),
@@ -233,7 +223,7 @@ mod layer_composer {
             };
         }
 
-        fn validate_multiple(&mut self, input: event::InputEvent, output: Vec<ControlCode>) {
+        fn validate_multiple(&mut self, input: InputEvent, output: Vec<ControlCode>) {
             assert_that!(&self.transform(input).unwrap(), contains_in_order(output));
         }
     }
@@ -356,7 +346,7 @@ mod layer_composer {
         th.validate_single(th.key(KC_F, Down), None);
         assert_that!(&th.layers[1].active, eq(false));
 
-        // layer doesn't get set to active until both after the next Held key event after the tap
+        // layer doesn't get set to active until both after the next Held key fter the tap
         // toggle timeout
         fake_now.adjust_now(Duration::from_millis(1000));
         assert_that!(&th.layers[1].active, eq(false));

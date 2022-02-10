@@ -12,12 +12,13 @@ use maplit::hashmap;
 mod cli;
 use cli::get_clap_app;
 
+use qsk_types::control_code::ControlCode;
 use qsk::device::linux::Device;
 use qsk::device::linux_evdev;
 use qsk::engine::QSKEngine;
 use qsk::events::KeyCode::*;
 use qsk::layers::{
-    key, tap_toggle, ControlCode, InputTransformer, Layer, LayerComposer, Passthrough,
+    key, tap_toggle, InputTransformer, Layer, LayerComposer, Passthrough,
 };
 use qsk::listener::StdoutListener;
 use qsk::recorder::Recorder;

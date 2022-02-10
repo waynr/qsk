@@ -1,4 +1,5 @@
 pub mod events;
+pub mod control_code;
 
 #[cfg(test)]
 mod tests {
