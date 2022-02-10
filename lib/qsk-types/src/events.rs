@@ -3,8 +3,6 @@ use std::time::SystemTime;
 use num_derive::{FromPrimitive, ToPrimitive};
 use serde::{Deserialize, Serialize};
 
-use crate::errors::Result;
-
 /// InputEvent is a qsk-specific struct modeled in large part after evdev_rs::InputEvent.
 /// Although evdev_rs::InputEvent actually supports a large range of Linux-specific input events,
 /// we focus here on keyboard and synchronization events specifically since keyboard events are the
@@ -493,12 +491,4 @@ pub enum SynCode {
     MTReport = 2,
     Dropped = 3,
     Max = 15,
-}
-
-pub trait InputEventSource: Send {
-    fn recv(&mut self) -> Result<InputEvent>;
-}
-
-pub trait InputEventSink: Send {
-    fn send(&mut self, e: InputEvent) -> Result<()>;
 }

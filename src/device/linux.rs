@@ -14,8 +14,8 @@ use log::error;
 use crate::errors::Error;
 use crate::errors::Result;
 
-use crate::events as event;
-use crate::events::{EventCode, InputEvent, KeyCode, SynCode};
+use crate::events::{EventCode, InputEvent, KeyCode, KeyState, SynCode};
+use crate::device::traits::{InputEventSink, InputEventSource};
 
 pub struct Device {
     inner: Arc<Mutex<evdev_rs::Device>>,
@@ -45,7 +45,7 @@ impl TryFrom<evdev_rs::InputEvent> for InputEvent {
             _ => None,
         };
         match c {
-            Some(code) => Ok(event::InputEvent {
+            Some(code) => Ok(InputEvent {
                 time: UNIX_EPOCH
                     + Duration::new(ev.time.tv_sec as u64, ev.time.tv_usec as u32 * 1000 as u32),
                 code,
@@ -112,8 +112,8 @@ impl Device {
     }
 }
 
-impl event::InputEventSource for Device {
-    fn recv(&mut self) -> Result<event::InputEvent> {
+impl InputEventSource for Device {
+    fn recv(&mut self) -> Result<InputEvent> {
         let guard = match self.inner.lock() {
             Ok(a) => a,
             Err(p_err) => {
@@ -138,8 +138,8 @@ pub struct UInputDevice {
 
 unsafe impl Send for UInputDevice {}
 
-impl event::InputEventSink for UInputDevice {
-    fn send(&mut self, e: event::InputEvent) -> Result<()> {
+impl InputEventSink for UInputDevice {
+    fn send(&mut self, e: InputEvent) -> Result<()> {
         let guard = match self.inner.lock() {
             Ok(a) => a,
             Err(p_err) => {
@@ -170,11 +170,11 @@ impl event::InputEventSink for UInputDevice {
     }
 }
 
-fn i32_into_ks(i: i32) -> event::KeyState {
+fn i32_into_ks(i: i32) -> KeyState {
     match i {
-        0 => event::KeyState::Up,
-        1 => event::KeyState::Down,
-        2 => event::KeyState::Held,
-        _ => event::KeyState::NotImplemented,
+        0 => KeyState::Up,
+        1 => KeyState::Down,
+        2 => KeyState::Held,
+        _ => KeyState::NotImplemented,
     }
 }

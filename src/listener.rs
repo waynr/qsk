@@ -2,7 +2,7 @@ use log::debug;
 use log::trace;
 
 use crate::events::EventCode;
-use crate::events::InputEventSource;
+use crate::device::traits::InputEventSource;
 
 use crate::device::linux::Device;
 

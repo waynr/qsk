@@ -10,8 +10,8 @@ use log::trace;
 
 use crate::events::EventCode;
 use crate::events::InputEvent;
-use crate::events::InputEventSink;
-use crate::events::InputEventSource;
+use crate::device::traits::InputEventSink;
+use crate::device::traits::InputEventSource;
 use crate::layers::ControlCode;
 use crate::layers::InputTransformer;
 

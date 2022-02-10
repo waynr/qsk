@@ -6,8 +6,8 @@ use evdev;
 use evdev::uinput;
 
 use crate::errors::{Error, Result};
-use crate::events as event;
-use crate::events::{EventCode, InputEvent, KeyCode, SynCode};
+use crate::events::{EventCode, InputEvent, KeyCode, KeyState, SynCode};
+use crate::device::traits::{InputEventSink, InputEventSource};
 
 pub struct Device {
     inner: evdev::EventStream,
@@ -87,7 +87,7 @@ impl TryFrom<evdev::InputEvent> for InputEvent {
             _ => None,
         };
         match ec {
-            Some(code) => Ok(event::InputEvent {
+            Some(code) => Ok(InputEvent {
                 time: ev.timestamp(),
                 code,
                 state: i32_into_ks(ev.value()),
@@ -109,19 +109,19 @@ impl TryFrom<InputEvent> for evdev::InputEvent {
     }
 }
 
-impl event::InputEventSource for Device {
-    fn recv(&mut self) -> Result<event::InputEvent> {
+impl InputEventSource for Device {
+    fn recv(&mut self) -> Result<InputEvent> {
         let ev = block_on(self.inner.next_event())?;
         Ok(InputEvent::try_from(ev)?)
     }
 }
 
-fn i32_into_ks(i: i32) -> event::KeyState {
+fn i32_into_ks(i: i32) -> KeyState {
     match i {
-        0 => event::KeyState::Up,
-        1 => event::KeyState::Down,
-        2 => event::KeyState::Held,
-        _ => event::KeyState::NotImplemented,
+        0 => KeyState::Up,
+        1 => KeyState::Down,
+        2 => KeyState::Held,
+        _ => KeyState::NotImplemented,
     }
 }
 
@@ -129,8 +129,8 @@ pub struct UInputDevice {
     inner: evdev::uinput::VirtualDevice,
 }
 
-impl event::InputEventSink for UInputDevice {
-    fn send(&mut self, ie: event::InputEvent) -> Result<()> {
+impl InputEventSink for UInputDevice {
+    fn send(&mut self, ie: InputEvent) -> Result<()> {
         let evdev_ie = evdev::InputEvent::try_from(ie)?;
         self.inner.emit(&[evdev_ie])?;
         Ok(())
