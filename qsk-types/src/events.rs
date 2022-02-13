@@ -2,6 +2,7 @@ use std::time::SystemTime;
 
 use num_derive::{FromPrimitive, ToPrimitive};
 use serde::{Deserialize, Serialize};
+use strum_macros::EnumString;
 
 /// InputEvent is a qsk-specific struct modeled in large part after evdev_rs::InputEvent.
 /// Although evdev_rs::InputEvent actually supports a large range of Linux-specific input events,
@@ -37,7 +38,7 @@ pub enum EventCode {
 /// key code naming conventions.
 #[allow(non_camel_case_types)]
 #[derive(
-    Serialize, Deserialize, FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash,
+    EnumString, Serialize, Deserialize, FromPrimitive, ToPrimitive, Clone, Copy, Debug, PartialEq, Eq, Hash,
 )]
 #[allow(dead_code)]
 pub enum KeyCode {
