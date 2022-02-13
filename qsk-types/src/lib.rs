@@ -1,5 +1,10 @@
 pub mod events;
+pub mod layers;
 pub mod control_code;
+
+pub use layers::*;
+pub use events::*;
+pub use control_code::*;
 
 #[cfg(test)]
 mod tests {

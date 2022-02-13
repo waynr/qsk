@@ -16,9 +16,9 @@ use serde::{
 use serde_json;
 
 use qsk_types::control_code::ControlCode;
+use qsk_types::layers::InputTransformer;
 use crate::errors::Result;
 use crate::events::InputEvent;
-use crate::layers::InputTransformer;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Log {

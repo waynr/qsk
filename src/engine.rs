@@ -9,11 +9,11 @@ use log::error;
 use log::trace;
 
 use qsk_types::control_code::ControlCode;
+use qsk_types::layers::InputTransformer;
 use crate::events::EventCode;
 use crate::events::InputEvent;
 use crate::device::traits::InputEventSink;
 use crate::device::traits::InputEventSource;
-use crate::layers::InputTransformer;
 
 pub struct QSKEngine {
     input_transformer: Box<dyn InputTransformer + Send>,
