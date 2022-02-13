@@ -6,7 +6,6 @@ use async_compat::Compat;
 use async_std::prelude::FutureExt;
 use async_std::task;
 use clap::ArgMatches;
-use ctrlc;
 use maplit::hashmap;
 
 mod cli;
