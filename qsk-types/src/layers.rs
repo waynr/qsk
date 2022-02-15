@@ -20,6 +20,7 @@ pub trait InputTransformer {
 }
 
 pub struct Layer {
+    name: String,
     map: HashMap<EventCode, Vec<ControlCode>>,
     active: bool,
 }
@@ -31,6 +32,7 @@ impl Layer {
             new_map.insert(EventCode::KeyCode(*k), v.clone());
         });
         Layer {
+            name: String::new(),
             map: new_map,
             active,
         }
@@ -55,6 +57,20 @@ impl Layer {
             (Some(_), false) => None,
             (None, _) => None,
         }
+    }
+
+    pub fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+
+    pub fn set_active(&mut self, active: bool) {
+        self.active = active;
+    }
+}
+
+impl From<HashMap<KeyCode, Vec<ControlCode>>> for Layer {
+    fn from(map: HashMap<KeyCode, Vec<ControlCode>>) -> Self {
+        Self::from_hashmap(map, false)
     }
 }
 
