@@ -9,9 +9,9 @@ mod parse;
 #[proc_macro]
 #[proc_macro_error]
 pub fn layer(ts: TokenStream) -> TokenStream {
-    let _ = parse::parse(ts.clone().into());
-    //let model = analyze::analyze(ast);
-    //let ir = lower::lower(model);
+    let ast = parse::parse(ts.clone().into());
+    let model = analyze::analyze(ast);
+    let _ = lower::lower(model);
     //let rust = codegen::codegen(ir).into();
     TokenStream::new()
 }

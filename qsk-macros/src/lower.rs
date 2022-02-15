@@ -1,7 +1,7 @@
-use crate::analyze::Model;
+use qsk_types::LayerComposer;
 
 pub struct Ir {}
 
-pub fn lower(model: Model) -> Ir {
+pub fn lower(model: LayerComposer) -> Ir {
     Ir{}
 }
