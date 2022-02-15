@@ -15,4 +15,4 @@ proc-macro-error = "~1.0"
 qsk-types = { path = "../qsk-types" }
 
 [dev-dependencies]
-trybuild = { path = "../../../dtolnay/trybuild" }
+trybuild = "~1.0"
