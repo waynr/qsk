@@ -1,5 +1,5 @@
 use proc_macro2::{TokenStream, TokenTree};
-use syn::{braced, bracketed, Result, Token, Ident, parse2, parenthesized};
+use syn::{braced, bracketed, Result, Token, Ident, parse2};
 use syn::buffer::Cursor;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
