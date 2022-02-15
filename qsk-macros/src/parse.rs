@@ -119,23 +119,24 @@ impl Parse for ControlCode {
 }
 
 pub struct KeyMaps {
-    lhs: Ident,
-    op: Token![->],
-    rhs: ControlCode,
+    pub(crate) lhs: Ident,
+    pub(crate) rhs: ControlCode,
 }
 
 impl Parse for KeyMaps {
     fn parse(stream: ParseStream) -> Result<Self> {
+        let lhs = stream.parse()?;
+        stream.parse::<Token![->]>()?; // discard operator for now
+        let rhs = stream.parse()?;
         Ok(KeyMaps{
-            lhs: stream.parse()?,
-            op: stream.parse()?,
-            rhs: stream.parse()?,
+            lhs,
+            rhs,
         })
     }
 }
 
 pub struct LayerBody {
-    maps: Punctuated<KeyMaps, Token![,]>,
+    pub(crate) maps: Punctuated<KeyMaps, Token![,]>,
 }
 
 impl Parse for LayerBody {
@@ -149,7 +150,7 @@ impl Parse for LayerBody {
 }
 
 pub struct LayerOpts {
-    opts: Punctuated<Ident, Token![,]>,
+    pub(crate) opts: Punctuated<Ident, Token![,]>,
 }
 
 impl Parse for LayerOpts {
@@ -163,9 +164,9 @@ impl Parse for LayerOpts {
 }
 
 pub struct Layer {
-    name: Ident,
-    opts: Option<LayerOpts>,
-    body: LayerBody,
+    pub(crate) name: Ident,
+    pub(crate) opts: Option<LayerOpts>,
+    pub(crate) body: LayerBody,
 }
 
 impl Parse for Layer {
@@ -186,6 +187,12 @@ impl Parse for Layer {
 
 pub struct Ast {
     layers: Punctuated<Layer, Token![,]>,
+}
+
+impl Ast {
+    pub fn iter(self) -> impl Iterator<Item = Layer> {
+        self.layers.into_iter()
+    }
 }
 
 impl Parse for Ast {
