@@ -37,7 +37,8 @@ thiserror = "1.0"
 num = "~0.3"
 
 # device
-evdev-rs = "~0.5"
+#evdev-rs = "~0.5"
+evdev-rs = { git = "https://github.com/waynr/evdev-rs", branch = "fix-cargo-rerun-if-changed" }
 #evdev = "~0.11"
 evdev = { path = "../evdev", features = ["tokio"]}
 futures = "~0.3"

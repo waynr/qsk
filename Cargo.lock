@@ -294,8 +294,7 @@ dependencies = [
 [[package]]
 name = "evdev-rs"
 version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7db51abf6b3205a6e6e8dd68d7a5414d7c50d61736a6f4c9b97df86ef5567cf"
+source = "git+https://github.com/waynr/evdev-rs?branch=fix-cargo-rerun-if-changed#971df5fbda5399891124c54b8d8692037c3c5ab7"
 dependencies = [
  "bitflags",
  "evdev-sys",
@@ -306,8 +305,7 @@ dependencies = [
 [[package]]
 name = "evdev-sys"
 version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80c71458f1f28b418779703f0fb17771f08562afacf0ee30176cca0e75e9e7d4"
+source = "git+https://github.com/waynr/evdev-rs?branch=fix-cargo-rerun-if-changed#971df5fbda5399891124c54b8d8692037c3c5ab7"
 dependencies = [
  "cc",
  "libc",
@@ -790,6 +788,7 @@ dependencies = [
  "serde_json",
  "strum",
  "strum_macros",
+ "thiserror",
 ]
 
 [[package]]
