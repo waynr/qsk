@@ -114,14 +114,14 @@ impl LayerComposer {
                         } else {
                             self.key_up_and_down(key)
                                 .iter()
-                                .for_each(|cc| output.push(*cc));
+                                .for_each(|cc| output.push(cc.clone()));
                         }
                     }
                     (Up, Some(t)) => {
                         if self.duration_since(*t) < Duration::from_millis(180) {
                             self.key_up_and_down(key)
                                 .iter()
-                                .for_each(|cc| output.push(*cc));
+                                .for_each(|cc| output.push(cc.clone()));
                         }
                         self.layers[layer].active = false;
                         self.timers.remove(&key);
