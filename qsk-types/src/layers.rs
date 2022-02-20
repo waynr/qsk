@@ -5,6 +5,7 @@ use std::slice::IterMut;
 use crate::control_code::ControlCode;
 use crate::events::{InputEvent, EventCode, KeyCode};
 
+#[derive(Clone)]
 pub struct Layer {
     name: String,
     map: HashMap<EventCode, Vec<ControlCode>>,
@@ -48,6 +49,9 @@ impl Layer {
 
 pub struct Layers {
     vec: Vec<Layer>,
+    // TODO: learn how to implement a self-referential struct and make the key here a reference to
+    // a layer's name and the Layer a reference to the named layer.
+    map: HashMap<String, Layer>,
 }
 
 impl Index<usize> for Layers {
@@ -66,8 +70,13 @@ impl IndexMut<usize> for Layers {
 
 impl From<Vec<Layer>> for Layers {
     fn from(vec: Vec<Layer>) -> Self {
+        let mut map: HashMap<String, Layer> = HashMap::new();
+        for layer in vec.clone().iter() {
+            map.insert(layer.name.clone(), layer.clone());
+        }
         Self {
-            vec
+            vec,
+            map,
         }
     }
 }
@@ -75,5 +84,9 @@ impl From<Vec<Layer>> for Layers {
 impl Layers {
     pub(crate) fn iter_mut(&mut self) -> IterMut<Layer> {
         self.vec.iter_mut()
+    }
+
+    pub(crate) fn get_mut(&mut self, key: String) -> Option<&mut Layer> {
+        self.map.get_mut(&key)
     }
 }
