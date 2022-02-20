@@ -16,7 +16,7 @@ use serde::{
 use serde_json;
 
 use qsk_types::control_code::ControlCode;
-use qsk_types::layers::InputTransformer;
+use qsk_types::layer_composer::InputTransformer;
 use crate::errors::Result;
 use crate::events::InputEvent;
 
@@ -72,7 +72,7 @@ impl InputTransformer for Listener {
         }
         if let Some(vcc) = self.inner.transform(ie) {
             for cc in vcc.iter() {
-                if let Err(e) = self.send(Log::Out(*cc)) {
+                if let Err(e) = self.send(Log::Out(cc.clone())) {
                     error!("error sending: {:?}", e);
                 }
             }

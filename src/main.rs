@@ -12,13 +12,15 @@ mod cli;
 use cli::get_clap_app;
 
 use qsk_types::control_code::ControlCode;
+use qsk_types::events::KeyCode::*;
+use qsk_types::layers::Layer;
+use qsk_types::layer_composer::{
+    key, tap_toggle, InputTransformer, LayerComposer, Passthrough,
+};
+
 use qsk::device::linux::Device;
 use qsk::device::linux_evdev;
 use qsk::engine::QSKEngine;
-use qsk::events::KeyCode::*;
-use qsk::layers::{
-    key, tap_toggle, InputTransformer, Layer, LayerComposer, Passthrough,
-};
 use qsk::listener::StdoutListener;
 use qsk::recorder::Recorder;
 
@@ -53,7 +55,7 @@ async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
         layers.insert(
             LAYERS::HomerowCodeRight.into(),
             Layer::from_hashmap(
-                "ModLayer",
+                String::from("ModLayer"),
                 hashmap!(
                     KC_F => tap_toggle(LAYERS::Navigation.into(), KC_F)
                 ),
@@ -63,7 +65,7 @@ async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
         layers.insert(
             LAYERS::Navigation.into(),
             Layer::from_hashmap(
-                "Navigation",
+                String::from("Navigation"),
                 hashmap!(
                     KC_END => vec![ControlCode::Exit],
                     KC_Y => key(KC_HOME),
@@ -78,7 +80,7 @@ async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
                 false,
             ),
         );
-        transformer = Box::new(LayerComposer::from_layers(layers));
+        transformer = Box::new(LayerComposer::from_layers(layers)?);
     }
 
     if let Some(path) = matches.value_of("log-keys-to") {

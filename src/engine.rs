@@ -9,7 +9,7 @@ use log::error;
 use log::trace;
 
 use qsk_types::control_code::ControlCode;
-use qsk_types::layers::InputTransformer;
+use qsk_types::layer_composer::InputTransformer;
 use crate::events::EventCode;
 use crate::events::InputEvent;
 use crate::device::traits::InputEventSink;
