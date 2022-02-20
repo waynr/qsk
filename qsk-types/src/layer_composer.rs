@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
-use crate::control_code::ControlCode;
-use crate::errors::{Result, Error};
+use crate::control_code::{ControlCode, LayerRef};
+use crate::errors::Result;
 use crate::events::{InputEvent, EventCode, KeyCode, KeyCode::*, KeyState::*};
 use crate::layers::{Layer, Layers};
 
@@ -38,7 +38,7 @@ pub fn key(k: KeyCode) -> Vec<ControlCode> {
 }
 
 pub fn tap_toggle(layer: usize, kc: KeyCode) -> Vec<ControlCode> {
-    vec![ControlCode::TapToggle(layer, kc)]
+    vec![ControlCode::TapToggle(LayerRef::ByIndex(layer), kc)]
 }
 
 pub struct LayerComposer {
@@ -97,19 +97,19 @@ impl LayerComposer {
         let mut output: Vec<ControlCode> = Vec::new();
         for cc in ccs {
             match cc {
-                ControlCode::TapToggle(layer, key) => match (e.state, self.timers.get(&key)) {
+                ControlCode::TapToggle(ref layer_ref, key) => match (e.state, self.timers.get(&key)) {
                     (Down, None) => {
                         self.timers.insert(key, self.now());
                     }
                     (Held, Some(t)) => {
                         if self.duration_since(*t) > Duration::from_millis(180) {
-                            self.layers[layer].active = true;
+                            self.activate_layer(layer_ref);
                             self.timers.remove(&key);
                         }
                     }
                     (Up, None) => {
-                        if self.layers[layer].active {
-                            self.layers[layer].active = false;
+                        if self.is_layer_active(layer_ref) {
+                            self.deactivate_layer(layer_ref);
                             self.timers.remove(&key);
                         } else {
                             self.key_up_and_down(key)
@@ -123,7 +123,7 @@ impl LayerComposer {
                                 .iter()
                                 .for_each(|cc| output.push(cc.clone()));
                         }
-                        self.layers[layer].active = false;
+                        self.deactivate_layer(layer_ref);
                         self.timers.remove(&key);
                     }
                     (_, _) => output.push(cc),
@@ -135,6 +135,36 @@ impl LayerComposer {
             [] => None,
             _ => Some(output),
         }
+    }
+
+    fn is_layer_active(&mut self, lr: &LayerRef) -> bool {
+        match lr {
+            LayerRef::ByIndex(index) => {
+                self.layers[*index].active
+            },
+            LayerRef::ByName(name) => {
+                self.layers.get_mut(name.to_string()).unwrap().active
+            },
+        }
+    }
+
+    fn activate_layer(&mut self, lr: &LayerRef) {
+        self.set_layer_active(lr, true)
+    }
+
+    fn deactivate_layer(&mut self, lr: &LayerRef) {
+        self.set_layer_active(lr, false)
+    }
+
+    fn set_layer_active(&mut self, lr: &LayerRef, to: bool) {
+        match lr {
+            LayerRef::ByIndex(index) => {
+                self.layers[*index].active = to
+            },
+            LayerRef::ByName(name) => {
+                self.layers.get_mut(name.to_string()).unwrap().active = to
+            },
+        };
     }
 }
 
