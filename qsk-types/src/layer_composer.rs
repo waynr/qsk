@@ -41,6 +41,10 @@ pub fn tap_toggle(layer: usize, kc: KeyCode) -> Vec<ControlCode> {
     vec![ControlCode::TapToggle(LayerRef::ByIndex(layer), kc)]
 }
 
+pub fn tap_toggle_by_name(name: String, kc: KeyCode) -> Vec<ControlCode> {
+    vec![ControlCode::TapToggle(LayerRef::ByName(name), kc)]
+}
+
 pub struct LayerComposer {
     base: Box<dyn InputTransformer + Send>,
     layers: Layers,
@@ -261,7 +265,8 @@ mod layer_composer {
             Layer::from_hashmap(
                 "control".to_string(),
                 hashmap!(
-                    KC_F => tap_toggle(LAYERS::Navigation.into(), KC_F)
+                    KC_F => tap_toggle(LAYERS::Navigation.into(), KC_F),
+                    KC_D => tap_toggle_by_name("navigation".to_string(), KC_D),
                 ),
                 true,
             ),
@@ -323,6 +328,37 @@ mod layer_composer {
         th.validate_single(th.key(KC_K, Down), Some(th.key(KC_K, Down)));
         th.validate_single(th.key(KC_K, Up), Some(th.key(KC_K, Up)));
 
+        th.validate_single(th.key(KC_J, Down), Some(th.key(KC_J, Down)));
+        th.validate_single(th.key(KC_J, Up), Some(th.key(KC_J, Up)));
+    }
+
+    #[test]
+    fn tap_toggle_toggle_by_layer_name() {
+        let (mut th, fake_now) = test_layer_composer();
+        assert_that!(&th.layers[0].active, eq(true));
+        assert_that!(&th.layers[1].active, eq(false));
+
+        // initial button down of a tap toggle key should not produce any characters and should not
+        // set the toggle layer to active
+        th.validate_single(th.key(KC_D, Down), None);
+        assert_that!(&th.layers[1].active, eq(false));
+
+        // layer doesn't get set to active until both after the next Held key fter the tap
+        // toggle timeout
+        fake_now.adjust_now(Duration::from_millis(1000));
+        assert_that!(&th.layers[1].active, eq(false));
+        th.validate_single(th.key(KC_D, Held), None);
+        assert_that!(&th.layers[1].active, eq(true));
+
+        // once layer is active, key transformation should take place based on definitions in the
+        // activated layer
+        th.validate_single(th.key(KC_J, Down), Some(th.key(KC_DOWN, Down)));
+        th.validate_single(th.key(KC_J, Up), Some(th.key(KC_DOWN, Up)));
+
+        // if layer is toggled, releasing tap toggle key after tap toggle timeout should result in
+        // no keyboard events and should result in the layer being disabled once again
+        th.validate_single(th.key(KC_D, Up), None);
+        assert_that!(&th.layers[1].active, eq(false));
         th.validate_single(th.key(KC_J, Down), Some(th.key(KC_J, Down)));
         th.validate_single(th.key(KC_J, Up), Some(th.key(KC_J, Up)));
     }
