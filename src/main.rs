@@ -53,6 +53,7 @@ async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
         layers.insert(
             LAYERS::HomerowCodeRight.into(),
             Layer::from_hashmap(
+                "ModLayer",
                 hashmap!(
                     KC_F => tap_toggle(LAYERS::Navigation.into(), KC_F)
                 ),
@@ -62,6 +63,7 @@ async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
         layers.insert(
             LAYERS::Navigation.into(),
             Layer::from_hashmap(
+                "Navigation",
                 hashmap!(
                     KC_END => vec![ControlCode::Exit],
                     KC_Y => key(KC_HOME),
