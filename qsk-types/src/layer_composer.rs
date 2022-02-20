@@ -161,6 +161,7 @@ mod layer_composer {
     use maplit::hashmap;
 
     use super::*;
+    use crate::KeyState;
 
     impl LayerComposer {
         fn key(&self, kc: KeyCode, ks: KeyState) -> InputEvent {
@@ -228,6 +229,7 @@ mod layer_composer {
         layers.insert(
             LAYERS::HomerowCodeRight.into(),
             Layer::from_hashmap(
+                "control".to_string(),
                 hashmap!(
                     KC_F => tap_toggle(LAYERS::Navigation.into(), KC_F)
                 ),
@@ -238,6 +240,7 @@ mod layer_composer {
         layers.insert(
             LAYERS::Navigation.into(),
             Layer::from_hashmap(
+                "navigation".to_string(),
                 hashmap!(
                     KC_Y => key(KC_HOME),
                     KC_U => key(KC_PAGEDOWN),
@@ -256,7 +259,7 @@ mod layer_composer {
         (
             LayerComposer {
                 base: Box::new(Passthrough {}),
-                layers,
+                layers: layers.into(),
                 timers: HashMap::new(),
                 nower: Box::new(fake_now.clone()),
             },
