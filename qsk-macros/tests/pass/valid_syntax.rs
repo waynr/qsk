@@ -1,7 +1,6 @@
 use qsk_macros::layer;
 
 fn main() {
-    println!("meow");
     layer!(
         ModLayer[Active]: {
             Y -> HOME,
