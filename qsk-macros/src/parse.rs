@@ -4,27 +4,43 @@ use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use proc_macro_error::abort;
 
-#[derive(Clone)]
+#[repr(transparent)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct StringParameter(Ident);
+
+impl ToString for StringParameter {
+    fn to_string(&self) -> String {
+        self.0.to_string()
+    }
+}
+
+impl StringParameter {
+    pub(crate) fn span(&self) -> Span {
+        self.0.span()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum KeyParameter {
-    Ident(Ident),
+    StringParameter(StringParameter),
 }
 
 impl Parse for KeyParameter {
     fn parse(stream: ParseStream) -> Result<Self> {
-        Ok(KeyParameter::Ident(stream.parse()?))
+        Ok(KeyParameter::StringParameter(StringParameter(stream.parse()?)))
     }
 }
 
 impl KeyParameter {
     pub(crate) fn span(&self) -> Span {
         match self {
-            Self::Ident(ident) => ident.span(),
+            Self::StringParameter(ident) => ident.span(),
         }
     }
 }
 
 #[repr(transparent)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct KeyFunctionName(pub Ident);
 
 impl ToString for KeyFunctionName {
@@ -33,16 +49,33 @@ impl ToString for KeyFunctionName {
     }
 }
 
+impl KeyFunctionName {
+    pub(crate) fn span(&self) -> Span {
+        self.0.span()
+    }
+}
+
 #[repr(transparent)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Key(pub Ident);
 
 impl ToString for Key {
     fn to_string(&self) -> String {
-        self.0.to_string()
+        let mut s = self.0.to_string();
+        if !s.starts_with("KC_") {
+            s = "KC_".to_owned() + &s;
+        }
+        s
     }
 }
 
+impl Key {
+    pub(crate) fn span(&self) -> Span {
+        self.0.span()
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
 pub struct KeyFunction {
     pub(crate) name: KeyFunctionName,
     pub(crate) params: Punctuated<KeyParameter, Token![,]>,
@@ -69,6 +102,7 @@ impl Parse for KeyFunction {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub enum ControlCode {
     Key(Key),
     Function(KeyFunction),
@@ -80,7 +114,7 @@ impl Parse for ControlCode {
             let name: Ident;
             let mut rest = *cursor;
 
-            // first token should always be an Ident, either the name of the key or the name of the 
+            // first token should always be an Ident, either the name of the key or the name of the function
             if let Some((tt, next)) = rest.token_tree() {
                 match tt {
                     TokenTree::Ident(ident) => {
@@ -124,7 +158,8 @@ impl Parse for ControlCode {
                     _ => return Err(cursor.error(format!("unexpected token tree: {:?}", name))),
                 }
             } else {
-                return Err(cursor.error("missing tokens"));
+                // if there is no additional token, then we have Key control code
+                return Ok((ControlCode::Key(Key(name)), rest))
             }
 
             if let Some((tt, _)) = rest.token_tree() {
@@ -147,13 +182,13 @@ impl Parse for ControlCode {
 }
 
 pub struct KeyMaps {
-    pub(crate) lhs: Ident,
+    pub(crate) lhs: Key,
     pub(crate) rhs: ControlCode,
 }
 
 impl Parse for KeyMaps {
     fn parse(stream: ParseStream) -> Result<Self> {
-        let lhs = stream.parse()?;
+        let lhs = Key(stream.parse()?);
         stream.parse::<Token![->]>()?; // discard operator for now
         let rhs = stream.parse()?;
         Ok(KeyMaps{
@@ -245,6 +280,10 @@ pub fn parse(ts: TokenStream) -> Ast {
 mod tests {
     use quote::quote;
 
+    use galvanic_assert::matchers::*;
+    use galvanic_assert::*;
+    use syn::Result;
+
     use super::*;
     #[test]
     fn valid_syntax() {
@@ -266,5 +305,14 @@ mod tests {
                 },
             ),
         );
+    }
+
+    #[test]
+    fn parse_control_code_key() -> Result<()> {
+        let ts = quote!(F);
+        let parsed = parse2::<ControlCode>(ts)?;
+        let expected = ControlCode::Key(Key(Ident::new("F", Span::call_site())));
+        assert_that!(&parsed, eq(expected));
+        Ok(())
     }
 }

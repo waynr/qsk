@@ -13,7 +13,7 @@ const VALID_KEY_FUNCTIONS: [&'static str; 3] = ["TT", "TapToggle", "Exit"];
 impl From<parse::KeyParameter> for LayerRef {
     fn from(parsed: parse::KeyParameter) -> Self {
         match parsed {
-            parse::KeyParameter::Ident(ident) => LayerRef::ByName(ident.to_string()),
+            parse::KeyParameter::StringParameter(ident) => LayerRef::ByName(ident.to_string()),
         }
     }
 }
@@ -21,11 +21,15 @@ impl From<parse::KeyParameter> for LayerRef {
 impl From<parse::KeyParameter> for KeyCode {
     fn from(parsed: parse::KeyParameter) -> Self {
         match parsed {
-            parse::KeyParameter::Ident(ident) => {
-                match KeyCode::from_str(&ident.to_string()) {
+            parse::KeyParameter::StringParameter(param) => {
+                let mut kc_str = param.to_string();
+                if !kc_str.starts_with("KC_") {
+                    kc_str = "KC_".to_owned() + &kc_str;
+                }
+                match KeyCode::from_str(&kc_str) {
                     Ok(kc) => kc,
                     Err(e) => abort!(
-                        ident.span(),
+                        param.span(),
                         format!("invalid key code: {:?}", e),
                     ),
                 }
@@ -41,7 +45,6 @@ impl From<&parse::KeyFunction> for ControlCode {
                 ControlCode::Exit
             },
             "TT" | "TapToggle" => {
-                // TODO: get layer ref and keycode from KeyParameters
                 let mut params = parsed.params.clone().into_iter().rev();
                 let layer_ref = params
                     .next()
@@ -68,7 +71,7 @@ impl From<&parse::KeyFunction> for ControlCode {
             },
             _ => {
                 abort!(
-                    parsed.name.0.span(),
+                    parsed.name.span(),
                     "invalid key function";
                     help = format!("valid key functions include: {:?}", VALID_KEY_FUNCTIONS));
             },
@@ -78,13 +81,25 @@ impl From<&parse::KeyFunction> for ControlCode {
 
 impl From<&parse::KeyFunctionName> for ControlCode {
     fn from(parsed: &parse::KeyFunctionName) -> ControlCode {
-        ControlCode::KeyMap(KeyCode::from_str(&parsed.to_string()).unwrap())
+        match KeyCode::from_str(&parsed.to_string()) {
+            Ok(kc) => ControlCode::KeyMap(kc),
+            Err(e) => abort!(
+                parsed.span(),
+                format!("invalid key function name: {:?}", e),
+            ),
+        }
     }
 }
 
 impl From<&parse::Key> for ControlCode {
     fn from(parsed: &parse::Key) -> ControlCode {
-        ControlCode::KeyMap(KeyCode::from_str(&parsed.to_string()).unwrap())
+        match KeyCode::from_str(&parsed.to_string()) {
+            Ok(kc) => ControlCode::KeyMap(kc),
+            Err(e) => abort!(
+                parsed.span(),
+                format!("invalid key code: {:?}", e),
+            ),
+        }
     }
 }
 
@@ -97,11 +112,23 @@ impl From<&parse::ControlCode> for ControlCode {
     }
 }
 
+impl From<&parse::Key> for KeyCode {
+    fn from(parsed: &parse::Key) -> Self {
+        match KeyCode::from_str(&parsed.to_string()) {
+            Ok(kc) => kc,
+            Err(e) => abort!(
+                parsed.span(),
+                format!("invalid key code: {:?}", e),
+            ),
+        }
+    }
+}
+
 impl From<parse::LayerBody> for HashMap<KeyCode, Vec<ControlCode>> {
     fn from(parsed: LayerBody) -> Self {
         parsed.maps.iter()
             .map(|km| (
-                    KeyCode::from_str(&km.lhs.to_string()).unwrap(),
+                    KeyCode::from(&km.lhs),
                     vec![ControlCode::from(&km.rhs)])
                 )
             .collect()

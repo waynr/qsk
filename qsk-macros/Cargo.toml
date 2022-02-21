@@ -15,4 +15,6 @@ proc-macro-error = "~1.0"
 qsk-types = { path = "../qsk-types" }
 
 [dev-dependencies]
+galvanic-assert = "~0.8"
+
 trybuild = "~1.0"
