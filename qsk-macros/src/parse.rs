@@ -309,10 +309,29 @@ mod tests {
 
     #[test]
     fn parse_control_code_key() -> Result<()> {
+        // validate that F is parsed and ToString impl outputs "KC_F"
         let ts = quote!(F);
         let parsed = parse2::<ControlCode>(ts)?;
         let expected = ControlCode::Key(Key(Ident::new("F", Span::call_site())));
         assert_that!(&parsed, eq(expected));
+
+        if let ControlCode::Key(key) = parsed {
+            assert_that!(&key.to_string(), eq(String::from("KC_F")));
+        } else {
+            assert!(false);
+        }
+
+        // validate that KC_F is parsed and ToString impl outputs "KC_F"
+        let ts = quote!(KC_F);
+        let parsed = parse2::<ControlCode>(ts)?;
+        let expected = ControlCode::Key(Key(Ident::new("KC_F", Span::call_site())));
+        assert_that!(&parsed, eq(expected));
+
+        if let ControlCode::Key(key) = parsed {
+            assert_that!(&key.to_string(), eq(String::from("KC_F")));
+        } else {
+            assert!(false);
+        }
         Ok(())
     }
 }
