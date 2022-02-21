@@ -1,10 +1,10 @@
-use proc_macro2::{TokenStream, TokenTree};
+use proc_macro2::{TokenStream, TokenTree, Span};
 use syn::{braced, bracketed, Result, Token, Ident, parse2};
-use syn::buffer::Cursor;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use proc_macro_error::abort;
 
+#[derive(Clone)]
 pub enum KeyParameter {
     Ident(Ident),
 }
@@ -15,15 +15,43 @@ impl Parse for KeyParameter {
     }
 }
 
+impl KeyParameter {
+    pub(crate) fn span(&self) -> Span {
+        match self {
+            Self::Ident(ident) => ident.span(),
+        }
+    }
+}
+
+#[repr(transparent)]
+#[derive(Debug)]
+pub struct KeyFunctionName(pub Ident);
+
+impl ToString for KeyFunctionName {
+    fn to_string(&self) -> String {
+        self.0.to_string()
+    }
+}
+
+#[repr(transparent)]
+#[derive(Debug)]
+pub struct Key(pub Ident);
+
+impl ToString for Key {
+    fn to_string(&self) -> String {
+        self.0.to_string()
+    }
+}
+
 pub struct KeyFunction {
-    name: Ident,
-    params: Punctuated<KeyParameter, Token![,]>,
+    pub(crate) name: KeyFunctionName,
+    pub(crate) params: Punctuated<KeyParameter, Token![,]>,
 }
 
 impl KeyFunction {
     fn name_only(name: Ident) -> Self {
         KeyFunction{
-            name,
+            name: KeyFunctionName(name),
             params: Punctuated::new(),
         }
     }
@@ -35,14 +63,14 @@ impl Parse for KeyFunction {
         //let content;
         //parenthesized!(content in stream);
         Ok(KeyFunction{
-            name,
+            name: KeyFunctionName(name),
             params: stream.parse_terminated(KeyParameter::parse)?,
         })
     }
 }
 
 pub enum ControlCode {
-    Key(Ident),
+    Key(Key),
     Function(KeyFunction),
 }
 
@@ -75,7 +103,7 @@ impl Parse for ControlCode {
                         if punct.as_char() != ',' {
                             return Err(cursor.error("unexpected punctuation"))
                         }
-                        return Ok((ControlCode::Key(name), rest))
+                        return Ok((ControlCode::Key(Key(name)), rest))
                     },
                     // match key function, eg 'F -> TT(Navigation),'
                     //                              ^^^^^^^^^^^^^^
@@ -99,7 +127,7 @@ impl Parse for ControlCode {
                 return Err(cursor.error("missing tokens"));
             }
 
-            if let Some((tt, next)) = rest.token_tree() {
+            if let Some((tt, _)) = rest.token_tree() {
                 match &tt {
                     // match comma at end of straight key func, eg 'Y -> EXIT(),'
                     //                                                         ^
@@ -186,7 +214,7 @@ impl Parse for Layer {
 }
 
 pub struct Ast {
-    layers: Punctuated<Layer, Token![,]>,
+    pub(crate) layers: Punctuated<Layer, Token![,]>,
 }
 
 impl Ast {
@@ -223,7 +251,7 @@ mod tests {
         parse(
             quote!(
                 ModLayer[Active]: {
-                    F -> TT(Navigation),
+                    F -> TT(Navigation, F),
                 },
                 Navigation: {
                     END -> Exit(),
