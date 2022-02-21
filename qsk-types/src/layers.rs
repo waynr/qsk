@@ -45,6 +45,10 @@ impl Layer {
             (None, _) => None,
         }
     }
+
+    pub fn activate(&mut self) {
+        self.active = true
+    }
 }
 
 pub struct Layers {
