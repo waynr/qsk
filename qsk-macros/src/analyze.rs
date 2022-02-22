@@ -45,7 +45,7 @@ impl From<&parse::KeyFunction> for ControlCode {
                 ControlCode::Exit
             },
             "TT" | "TapToggle" => {
-                let mut params = parsed.params.clone().0.into_iter().rev();
+                let mut params = parsed.params.clone().0.into_iter();
                 let layer_ref = params
                     .next()
                     .unwrap_or_else(|| abort!(
