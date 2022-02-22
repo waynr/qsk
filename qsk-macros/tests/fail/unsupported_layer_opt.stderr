@@ -1,0 +1,5 @@
+error: missing key code argument
+ --> tests/fail/unsupported_layer_opt.rs:7:18
+  |
+7 |             F -> TT(Navigation),
+  |                  ^^
