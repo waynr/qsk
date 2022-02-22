@@ -124,12 +124,12 @@ impl Parse for ControlCode {
                 return Err(cursor.error("no control code was found"))
             }
 
-            let funccall: KeyFunction;
+            let key_func: KeyFunction;
             // if there is a second token tree that's not a punct and it's a group
             if let Some((tt, next)) = rest.token_tree() {
                 match &tt {
-                    // match comma at end of straight keymap, eg 'Y -> HOME,'
-                    //                                                     ^
+                    // match comma at end of straight KeyMaps, eg 'Y -> HOME,'
+                    //                                                      ^
                     TokenTree::Punct(punct) => {
                         if punct.as_char() != ',' {
                             return Err(cursor.error("unexpected punctuation"))
@@ -140,12 +140,12 @@ impl Parse for ControlCode {
                     //                                       ^^^^^^^^^^^^
                     TokenTree::Group(group) => {
                         if group.stream().is_empty() {
-                            funccall = KeyFunction::name_only(name.clone());
+                            key_func = KeyFunction::name_only(name.clone());
                             rest = next;
                         } else {
                             match parse2::<KeyFunctionParameters>(group.stream()) {
                                 Ok(kps) => {
-                                    funccall = KeyFunction{
+                                    key_func = KeyFunction{
                                         name: KeyFunctionName(name.clone()),
                                         params: kps,
                                     };
@@ -162,26 +162,27 @@ impl Parse for ControlCode {
                 return Ok((ControlCode::Key(Key(name)), rest))
             }
 
-            // if we find any additional token trees then something is wrong.
+            // handle optional comma after key function
             if let Some((tt, _)) = rest.token_tree() {
                 match &tt {
-                    // match comma at end of straight keymap, eg 'Y -> EXIT(),'
-                    //                                                       ^
+                    // match comma at end of straight KeyMaps, eg 'Y -> EXIT(),'
+                    //                                                        ^
                     TokenTree::Punct(punct) => {
                         if punct.as_char() != ',' {
                             return Err(cursor.error("unexpected punctuation"))
                         }
-                        return Ok((ControlCode::Key(Key(name)), rest))
                     },
+                    // if we find any additional token trees then something is wrong.
                     _ => return Err(cursor.error(format!("unexpected token tree: {:?}", name))),
                 }
             }
 
-            return Ok((ControlCode::Function(funccall), rest));
+            return Ok((ControlCode::Function(key_func), rest));
         })
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub struct KeyMaps {
     pub(crate) lhs: Key,
     pub(crate) rhs: ControlCode,
@@ -199,6 +200,7 @@ impl Parse for KeyMaps {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub struct LayerBody {
     pub(crate) maps: Punctuated<KeyMaps, Token![,]>,
 }
@@ -362,6 +364,55 @@ mod tests {
         let parsed = parse2::<ControlCode>(ts)?;
         let expected = control_code_fn("TapToggle", vec!["Navigation", "F"]);
         assert_that!(&parsed, eq(expected));
+
+        let ts = quote!(TT(Navigation, F));
+        let parsed = parse2::<ControlCode>(ts)?;
+        let expected = control_code_fn("TT", vec!["Navigation", "F"]);
+        assert_that!(&parsed, eq(expected));
+        Ok(())
+    }
+
+    #[test]
+    fn parse_keymap() -> Result<()> {
+        let ts = quote!(F -> TapToggle(Navigation, F));
+        let parsed = parse2::<KeyMaps>(ts)?;
+        let rhs = control_code_fn("TapToggle", vec!["Navigation", "F"]);
+        let lhs = Key(Ident::new("F", Span::call_site()));
+        let expected = KeyMaps{
+            lhs: lhs,
+            rhs: rhs,
+        };
+        assert_that!(&parsed, eq(expected));
+
+        Ok(())
+    }
+
+    #[test]
+    fn parse_layer_body() -> Result<()> {
+        let ts = quote!({
+            Y -> HOME,
+            F -> TapToggle(Navigation, F)
+        });
+
+        let mut maps: Punctuated<KeyMaps, Comma> = Punctuated::new();
+
+        // Y -> HOME
+        let rhs = ControlCode::Key(Key(Ident::new("HOME", Span::call_site())));
+        let lhs = Key(Ident::new("Y", Span::call_site()));
+        let km = KeyMaps{ lhs, rhs, };
+        maps.push(km);
+
+        // F -> TapToggle(Navigation, F)
+        let rhs = control_code_fn("TapToggle", vec!["Navigation", "F"]);
+        let lhs = Key(Ident::new("F", Span::call_site()));
+        let km = KeyMaps{ lhs, rhs, };
+        maps.push(km);
+
+        let expected = LayerBody{ maps, };
+
+        let parsed = parse2::<LayerBody>(ts)?;
+        assert_that!(&parsed, eq(expected));
+
         Ok(())
     }
 }
