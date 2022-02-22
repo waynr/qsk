@@ -30,7 +30,7 @@ impl From<parse::KeyParameter> for KeyCode {
                     Ok(kc) => kc,
                     Err(e) => abort!(
                         param.span(),
-                        format!("invalid key code: {:?}", e),
+                        format!("invalid key code when converting parse::KeyParameter to KeyCode: {:?}", e),
                     ),
                 }
             },
@@ -97,7 +97,7 @@ impl From<&parse::Key> for ControlCode {
             Ok(kc) => ControlCode::KeyMap(kc),
             Err(e) => abort!(
                 parsed.span(),
-                format!("invalid key code: {:?}", e),
+                format!("invalid key code when converting parse::Key to ControlCode: {:?}", e),
             ),
         }
     }
@@ -118,7 +118,7 @@ impl From<&parse::Key> for KeyCode {
             Ok(kc) => kc,
             Err(e) => abort!(
                 parsed.span(),
-                format!("invalid key code: {:?}", e),
+                format!("invalid key code when converting parse::Key to KeyCode: {:?}", e),
             ),
         }
     }
