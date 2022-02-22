@@ -75,30 +75,27 @@ impl Key {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct KeyFunctionParameters(pub(crate) Punctuated<KeyParameter, Token![,]>);
+
+impl Parse for KeyFunctionParameters {
+    fn parse(stream: ParseStream) -> Result<Self> {
+        Ok(KeyFunctionParameters(stream.parse_terminated(KeyParameter::parse)?))
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct KeyFunction {
     pub(crate) name: KeyFunctionName,
-    pub(crate) params: Punctuated<KeyParameter, Token![,]>,
+    pub(crate) params: KeyFunctionParameters,
 }
 
 impl KeyFunction {
     fn name_only(name: Ident) -> Self {
         KeyFunction{
             name: KeyFunctionName(name),
-            params: Punctuated::new(),
+            params: KeyFunctionParameters(Punctuated::new()),
         }
-    }
-}
-
-impl Parse for KeyFunction {
-    fn parse(stream: ParseStream) -> Result<Self> {
-        let name = stream.parse()?;
-        //let content;
-        //parenthesized!(content in stream);
-        Ok(KeyFunction{
-            name: KeyFunctionName(name),
-            params: stream.parse_terminated(KeyParameter::parse)?,
-        })
     }
 }
 
@@ -139,16 +136,19 @@ impl Parse for ControlCode {
                         }
                         return Ok((ControlCode::Key(Key(name)), rest))
                     },
-                    // match key function, eg 'F -> TT(Navigation),'
-                    //                              ^^^^^^^^^^^^^^
+                    // match key function params, eg 'F -> TT(Navigation),'
+                    //                                       ^^^^^^^^^^^^
                     TokenTree::Group(group) => {
                         if group.stream().is_empty() {
                             funccall = KeyFunction::name_only(name.clone());
                             rest = next;
                         } else {
-                            match parse2::<KeyFunction>(group.stream()) {
-                                Ok(kf) => {
-                                    funccall = kf;
+                            match parse2::<KeyFunctionParameters>(group.stream()) {
+                                Ok(kps) => {
+                                    funccall = KeyFunction{
+                                        name: KeyFunctionName(name.clone()),
+                                        params: kps,
+                                    };
                                     rest = next;
                                 },
                                 Err(e) => return Err(e),
@@ -158,25 +158,26 @@ impl Parse for ControlCode {
                     _ => return Err(cursor.error(format!("unexpected token tree: {:?}", name))),
                 }
             } else {
-                // if there is no additional token, then we have Key control code
+                // if there is no additional token, then we have ControlCode::Key
                 return Ok((ControlCode::Key(Key(name)), rest))
             }
 
+            // if we find any additional token trees then something is wrong.
             if let Some((tt, _)) = rest.token_tree() {
                 match &tt {
-                    // match comma at end of straight key func, eg 'Y -> EXIT(),'
-                    //                                                         ^
+                    // match comma at end of straight keymap, eg 'Y -> EXIT(),'
+                    //                                                       ^
                     TokenTree::Punct(punct) => {
                         if punct.as_char() != ',' {
                             return Err(cursor.error("unexpected punctuation"))
                         }
-                        return Ok((ControlCode::Function(funccall), rest))
+                        return Ok((ControlCode::Key(Key(name)), rest))
                     },
                     _ => return Err(cursor.error(format!("unexpected token tree: {:?}", name))),
                 }
             }
 
-            Err(cursor.error("missing tokens"))
+            return Ok((ControlCode::Function(funccall), rest));
         })
     }
 }
@@ -332,6 +333,13 @@ mod tests {
         } else {
             assert!(false);
         }
+        Ok(())
+    }
+
+    #[test]
+    fn parse_control_code_function() -> Result<()> {
+        let ts = quote!(TapToggle(Navigation, F));
+        let _ = parse2::<ControlCode>(ts)?;
         Ok(())
     }
 }
