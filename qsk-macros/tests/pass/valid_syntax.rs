@@ -4,7 +4,7 @@ fn main() {
     layer!(
         ModLayer[Active]: {
             Y -> HOME,
-            F -> TT(Navigation),
+            F -> TT(Navigation, F),
         },
         Navigation: {
             END -> Exit(),
