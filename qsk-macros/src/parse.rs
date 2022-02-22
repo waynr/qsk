@@ -284,6 +284,7 @@ mod tests {
     use galvanic_assert::matchers::*;
     use galvanic_assert::*;
     use syn::Result;
+    use syn::token::Comma;
 
     use super::*;
     #[test]
@@ -336,10 +337,31 @@ mod tests {
         Ok(())
     }
 
+    fn control_code_fn(name: &str, params: Vec<&str>) -> ControlCode {
+        let mut expected_params: Punctuated<KeyParameter, Comma> = Punctuated::new();
+        for param in params {
+            expected_params
+                .push(
+                    KeyParameter::StringParameter(StringParameter(
+                        Ident::new(param, Span::call_site())
+                    ))
+                );
+        }
+
+        ControlCode::Function(
+            KeyFunction{
+                name: KeyFunctionName(Ident::new(name, Span::call_site())),
+                params: KeyFunctionParameters(expected_params),
+            }
+        )
+    }
+
     #[test]
     fn parse_control_code_function() -> Result<()> {
         let ts = quote!(TapToggle(Navigation, F));
-        let _ = parse2::<ControlCode>(ts)?;
+        let parsed = parse2::<ControlCode>(ts)?;
+        let expected = control_code_fn("TapToggle", vec!["Navigation", "F"]);
+        assert_that!(&parsed, eq(expected));
         Ok(())
     }
 }
