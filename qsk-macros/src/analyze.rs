@@ -98,6 +98,7 @@ impl From<&parse::Key> for ControlCode {
         match KeyCode::from_str(&parsed.to_string()) {
             Ok(kc) => ControlCode::KeyMap(kc),
             Err(e) => abort!(
+                // ../tests/fail/analyze/invalid-key-code-control-code.rs
                 parsed.span(),
                 format!("invalid key code when converting parse::Key to ControlCode: {:?}", e),
             ),

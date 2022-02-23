@@ -1,0 +1,5 @@
+error: invalid key code when converting parse::Key to ControlCode: VariantNotFound
+ --> tests/fail/analyze/invalid-key-code-control-code.rs:6:18
+  |
+6 |             F -> MEOW,
+  |                  ^^^^
