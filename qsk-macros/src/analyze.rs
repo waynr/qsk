@@ -28,10 +28,12 @@ impl From<parse::KeyFunctionParameter> for KeyCode {
                 }
                 match KeyCode::from_str(&kc_str) {
                     Ok(kc) => kc,
-                    Err(e) => abort!(
-                        param.span(),
-                        format!("invalid key code when converting parse::KeyFunctionParameter to KeyCode: {:?}", e),
-                    ),
+                    Err(e) => {
+                        // ../tests/fail/invalid-key-code-in-key-function.rs
+                        abort!(
+                            param.span(),
+                            format!("invalid key code when converting parse::KeyFunctionParameter to KeyCode: {:?}", e),
+                    )},
                 }
             },
         }
