@@ -2,7 +2,7 @@ use qsk_macros::layer;
 
 fn main() {
     layer!(
-        ModLayer[Meow]: {
+        ModLayer: {
             F -> TT(Navigation, MEOW),
         },
     );
