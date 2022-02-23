@@ -1,0 +1,5 @@
+error: invalid key code when converting parse::KeyFunctionParameter to KeyCode: VariantNotFound
+ --> tests/fail/invalid-key-code-in-key-function.rs:6:33
+  |
+6 |             F -> TT(Navigation, MEOW),
+  |                                 ^^^^
