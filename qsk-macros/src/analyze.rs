@@ -40,12 +40,20 @@ impl From<parse::KeyFunctionParameter> for KeyCode {
 
 impl From<&parse::KeyFunction> for ControlCode {
     fn from(parsed: &parse::KeyFunction) -> Self {
+        let mut params = parsed.params.clone().0.into_iter();
         match parsed.name.to_string().as_str() {
             "Exit" => {
+                match params.next() {
+                    Some(param) => abort!(
+                        // ../tests/fail/exit-unexpected-arguments.rs
+                        param.span(),
+                        "unexpected argument",
+                        ),
+                    None => (),
+                }
                 ControlCode::Exit
             },
             "TT" | "TapToggle" => {
-                let mut params = parsed.params.clone().0.into_iter();
                 let layer_ref = params
                     .next()
                     .unwrap_or_else(|| abort!(
