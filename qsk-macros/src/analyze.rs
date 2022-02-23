@@ -93,18 +93,6 @@ impl From<&parse::KeyFunction> for ControlCode {
     }
 }
 
-impl From<&parse::KeyFunctionName> for ControlCode {
-    fn from(parsed: &parse::KeyFunctionName) -> ControlCode {
-        match KeyCode::from_str(&parsed.to_string()) {
-            Ok(kc) => ControlCode::KeyMap(kc),
-            Err(e) => abort!(
-                parsed.span(),
-                format!("invalid key function name: {:?}", e),
-            ),
-        }
-    }
-}
-
 impl From<&parse::Key> for ControlCode {
     fn from(parsed: &parse::Key) -> ControlCode {
         match KeyCode::from_str(&parsed.to_string()) {
