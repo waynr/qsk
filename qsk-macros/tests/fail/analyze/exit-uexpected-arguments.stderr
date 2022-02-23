@@ -1,5 +1,5 @@
 error: unexpected argument
- --> tests/fail/exit-uexpected-arguments.rs:6:23
+ --> tests/fail/analyze/exit-uexpected-arguments.rs:6:23
   |
 6 |             F -> Exit(MEOW),
   |                       ^^^^

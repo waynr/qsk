@@ -2,7 +2,7 @@ error: invalid key function
 
          = help: valid key functions include: ["TT", "TapToggle", "Exit"]
 
- --> tests/fail/unsupported-key-function.rs:6:18
+ --> tests/fail/analyze/unsupported-key-function.rs:6:18
   |
 6 |             F -> MEOW(Navigation),
   |                  ^^^^

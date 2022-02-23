@@ -29,7 +29,7 @@ impl From<parse::KeyFunctionParameter> for KeyCode {
                 match KeyCode::from_str(&kc_str) {
                     Ok(kc) => kc,
                     Err(e) => {
-                        // ../tests/fail/invalid-key-code-in-key-function.rs
+                        // ../tests/fail/analyze/invalid-key-code-in-key-function.rs
                         abort!(
                             param.span(),
                             format!("invalid key code when converting parse::KeyFunctionParameter to KeyCode: {:?}", e),
@@ -47,7 +47,7 @@ impl From<&parse::KeyFunction> for ControlCode {
             "Exit" => {
                 match params.next() {
                     Some(param) => abort!(
-                        // ../tests/fail/exit-unexpected-arguments.rs
+                        // ../tests/fail/analyze/exit-unexpected-arguments.rs
                         param.span(),
                         "unexpected argument",
                         ),
@@ -59,7 +59,7 @@ impl From<&parse::KeyFunction> for ControlCode {
                 let layer_ref = params
                     .next()
                     .unwrap_or_else(|| abort!(
-                        // ../tests/fail/tap-toggle-missing-layer-ref-argument.rs
+                        // ../tests/fail/analyze/tap-toggle-missing-layer-ref-argument.rs
                         parsed.name.0.span(),
                         "missing layer ref argument"
                     ))
@@ -67,14 +67,14 @@ impl From<&parse::KeyFunction> for ControlCode {
                 let key = params
                     .next()
                     .unwrap_or_else(|| abort!(
-                        // ../tests/fail/tap-toggle-missing-keycode-argument.rs
+                        // ../tests/fail/analyze/tap-toggle-missing-keycode-argument.rs
                         parsed.name.0.span(),
                         "missing key code argument"
                     ))
                     .into();
                 match params.next() {
                     Some(param) => abort!(
-                        // ../tests/fail/tap-toggle-unexpected-arguments.rs
+                        // ../tests/fail/analyze/tap-toggle-unexpected-arguments.rs
                         param.span(),
                         "unexpected argument",
                         ),
@@ -84,6 +84,7 @@ impl From<&parse::KeyFunction> for ControlCode {
             },
             _ => {
                 abort!(
+                    // ../tests/fail/analyze/unsupported-key-function.rs
                     parsed.name.span(),
                     "invalid key function";
                     help = format!("valid key functions include: {:?}", VALID_KEY_FUNCTIONS));
