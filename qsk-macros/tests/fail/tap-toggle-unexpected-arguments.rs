@@ -1,4 +1,3 @@
-
 use qsk_macros::layer;
 
 fn main() {
