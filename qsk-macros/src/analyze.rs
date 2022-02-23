@@ -120,6 +120,7 @@ impl From<&parse::Key> for KeyCode {
         match KeyCode::from_str(&parsed.to_string()) {
             Ok(kc) => kc,
             Err(e) => abort!(
+                // ../tests/fail/analyze/invalid-key-code-keymap-key.rs
                 parsed.span(),
                 format!("invalid key code when converting parse::Key to KeyCode: {:?}", e),
             ),
