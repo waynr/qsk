@@ -49,6 +49,7 @@ impl From<&parse::KeyFunction> for ControlCode {
                 let layer_ref = params
                     .next()
                     .unwrap_or_else(|| abort!(
+                        // ../tests/fail/tap-toggle-missing-layer-ref-argument.rs
                         parsed.name.0.span(),
                         "missing layer ref argument"
                     ))
@@ -56,12 +57,14 @@ impl From<&parse::KeyFunction> for ControlCode {
                 let key = params
                     .next()
                     .unwrap_or_else(|| abort!(
+                        // ../tests/fail/tap-toggle-missing-keycode-argument.rs
                         parsed.name.0.span(),
                         "missing key code argument"
                     ))
                     .into();
                 match params.next() {
                     Some(param) => abort!(
+                        // ../tests/fail/tap-toggle-unexpected-arguments.rs
                         param.span(),
                         "unexpected argument",
                         ),

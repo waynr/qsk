@@ -1,0 +1,5 @@
+error: missing layer ref argument
+ --> tests/fail/tap-toggle-missing-layer-ref-argument.rs:6:18
+  |
+6 |             F -> TapToggle(),
+  |                  ^^^^^^^^^

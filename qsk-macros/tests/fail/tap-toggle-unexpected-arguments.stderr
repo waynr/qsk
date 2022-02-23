@@ -1,0 +1,5 @@
+error: unexpected argument
+ --> tests/fail/tap-toggle-unexpected-arguments.rs:7:43
+  |
+7 |             F -> TapToggle(Navigation, F, MEOW),
+  |                                           ^^^^
