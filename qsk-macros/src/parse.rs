@@ -21,17 +21,17 @@ impl StringParameter {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum KeyParameter {
+pub enum KeyFunctionParameter {
     StringParameter(StringParameter),
 }
 
-impl Parse for KeyParameter {
+impl Parse for KeyFunctionParameter {
     fn parse(stream: ParseStream) -> Result<Self> {
-        Ok(KeyParameter::StringParameter(StringParameter(stream.parse()?)))
+        Ok(KeyFunctionParameter::StringParameter(StringParameter(stream.parse()?)))
     }
 }
 
-impl KeyParameter {
+impl KeyFunctionParameter {
     pub(crate) fn span(&self) -> Span {
         match self {
             Self::StringParameter(ident) => ident.span(),
@@ -76,11 +76,11 @@ impl Key {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct KeyFunctionParameters(pub(crate) Punctuated<KeyParameter, Token![,]>);
+pub struct KeyFunctionParameters(pub(crate) Punctuated<KeyFunctionParameter, Token![,]>);
 
 impl Parse for KeyFunctionParameters {
     fn parse(stream: ParseStream) -> Result<Self> {
-        Ok(KeyFunctionParameters(stream.parse_terminated(KeyParameter::parse)?))
+        Ok(KeyFunctionParameters(stream.parse_terminated(KeyFunctionParameter::parse)?))
     }
 }
 
@@ -340,11 +340,11 @@ mod tests {
     }
 
     fn control_code_fn(name: &str, params: Vec<&str>) -> ControlCode {
-        let mut expected_params: Punctuated<KeyParameter, Comma> = Punctuated::new();
+        let mut expected_params: Punctuated<KeyFunctionParameter, Comma> = Punctuated::new();
         for param in params {
             expected_params
                 .push(
-                    KeyParameter::StringParameter(StringParameter(
+                    KeyFunctionParameter::StringParameter(StringParameter(
                         Ident::new(param, Span::call_site())
                     ))
                 );

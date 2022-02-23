@@ -10,18 +10,18 @@ use crate::parse::{Ast, LayerBody};
 
 const VALID_KEY_FUNCTIONS: [&'static str; 3] = ["TT", "TapToggle", "Exit"];
 
-impl From<parse::KeyParameter> for LayerRef {
-    fn from(parsed: parse::KeyParameter) -> Self {
+impl From<parse::KeyFunctionParameter> for LayerRef {
+    fn from(parsed: parse::KeyFunctionParameter) -> Self {
         match parsed {
-            parse::KeyParameter::StringParameter(ident) => LayerRef::ByName(ident.to_string()),
+            parse::KeyFunctionParameter::StringParameter(ident) => LayerRef::ByName(ident.to_string()),
         }
     }
 }
 
-impl From<parse::KeyParameter> for KeyCode {
-    fn from(parsed: parse::KeyParameter) -> Self {
+impl From<parse::KeyFunctionParameter> for KeyCode {
+    fn from(parsed: parse::KeyFunctionParameter) -> Self {
         match parsed {
-            parse::KeyParameter::StringParameter(param) => {
+            parse::KeyFunctionParameter::StringParameter(param) => {
                 let mut kc_str = param.to_string();
                 if !kc_str.starts_with("KC_") {
                     kc_str = "KC_".to_owned() + &kc_str;
@@ -30,7 +30,7 @@ impl From<parse::KeyParameter> for KeyCode {
                     Ok(kc) => kc,
                     Err(e) => abort!(
                         param.span(),
-                        format!("invalid key code when converting parse::KeyParameter to KeyCode: {:?}", e),
+                        format!("invalid key code when converting parse::KeyFunctionParameter to KeyCode: {:?}", e),
                     ),
                 }
             },
