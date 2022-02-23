@@ -150,6 +150,7 @@ impl From<parse::Layer> for qsk_types::Layer {
                     match opt.to_string().as_str() {
                         "Active" => layer.activate(),
                         _ => {
+                            // ../tests/fail/analyze/invalid-layer-option.rs
                             abort!(
                                 opt.span(),
                                 "invalid layer option";
