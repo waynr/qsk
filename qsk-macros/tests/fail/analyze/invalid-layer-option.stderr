@@ -1,0 +1,8 @@
+error: invalid layer option
+
+         = help: valid layer options include: ["Active"]
+
+ --> tests/fail/analyze/invalid-layer-option.rs:5:18
+  |
+5 |         ModLayer[InvalidLayerOption]: {
+  |                  ^^^^^^^^^^^^^^^^^^
