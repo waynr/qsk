@@ -256,8 +256,8 @@ pub struct Ast {
 }
 
 impl Ast {
-    pub fn iter(self) -> impl Iterator<Item = Layer> {
-        self.layers.into_iter()
+    pub fn iter(&self) -> impl Iterator<Item = &Layer> {
+        self.layers.iter()
     }
 }
 

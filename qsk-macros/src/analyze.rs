@@ -128,8 +128,8 @@ impl From<&parse::Key> for KeyCode {
     }
 }
 
-impl From<parse::LayerBody> for HashMap<KeyCode, Vec<ControlCode>> {
-    fn from(parsed: LayerBody) -> Self {
+impl From<&parse::LayerBody> for HashMap<KeyCode, Vec<ControlCode>> {
+    fn from(parsed: &LayerBody) -> Self {
         parsed.maps.iter()
             .map(|km| (
                     KeyCode::from(&km.lhs),
@@ -141,10 +141,11 @@ impl From<parse::LayerBody> for HashMap<KeyCode, Vec<ControlCode>> {
 
 const VALID_LAYER_OPTIONS: [&'static str; 1] = ["Active"];
 
-impl From<parse::Layer> for qsk_types::Layer {
-    fn from(parsed: parse::Layer) -> Self {
-        let mut layer = qsk_types::Layer::from_hashmap(parsed.name.to_string(), parsed.body.into(), false);
-        match parsed.opts {
+impl From<&parse::Layer> for qsk_types::Layer {
+    fn from(parsed: &parse::Layer) -> Self {
+        let body = &parsed.body;
+        let mut layer = qsk_types::Layer::from_hashmap(parsed.name.to_string(), body.into(), false);
+        match &parsed.opts {
             Some(layer_opts) => {
                 for opt in layer_opts.opts.iter() {
                     match opt.to_string().as_str() {
