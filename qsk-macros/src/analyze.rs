@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 
 use proc_macro_error::{abort, abort_call_site};
@@ -166,8 +166,8 @@ impl From<&parse::Layer> for qsk_types::Layer {
     }
 }
 
-impl From<Ast> for LayerComposer {
-    fn from(parsed: Ast) -> Self {
+impl From<&Ast> for LayerComposer {
+    fn from(parsed: &Ast) -> Self {
         match LayerComposer::from_layers(
             parsed.iter()
                 .map(|layer| layer.into())
@@ -180,6 +180,45 @@ impl From<Ast> for LayerComposer {
     }
 }
 
+// Validate references against Ast rather than LayerComposer since this allows us to produce better
+// error messages using spans found on the Ast.
+pub fn validate_references(ast: &Ast) {
+    // first construct set of all valid layer names
+    let valid_layer_names: HashSet<String> = ast.iter()
+        .map(|layer| layer.name.to_string())
+        .collect();
+
+    // then iterate over all keymaps looking for all KeyFunctions that take a LayerRef
+    for layer in ast.iter() {
+        for keymaps in layer.body.iter() {
+            match &keymaps.rhs {
+                parse::ControlCode::Function(kf) => {
+                    match kf.name.to_string().as_str() {
+                        "TapToggle" | "TT" => {
+                            let layer_ref = &kf.params.0[0];
+                            match layer_ref {
+                                parse::KeyFunctionParameter::StringParameter(sp) => {
+                                    if !valid_layer_names.contains(sp.to_string().as_str()) {
+                                        abort!(
+                                            layer_ref.span(),
+                                            "layer reference does not exist";
+                                            help = format!("existing layers include: {:?}", valid_layer_names)
+                                        )
+                                    }
+                                },
+                            }
+                        },
+                        _ => continue,
+                    }
+                }
+                _ => continue,
+            }
+        }
+    }
+}
+
 pub fn analyze(ast: Ast) -> LayerComposer {
-    LayerComposer::from(ast)
+    let lc = LayerComposer::from(&ast);
+    validate_references(&ast);
+    lc
 }

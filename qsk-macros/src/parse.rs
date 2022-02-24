@@ -6,7 +6,7 @@ use proc_macro_error::abort;
 
 #[repr(transparent)]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct StringParameter(Ident);
+pub struct StringParameter(pub(crate) Ident);
 
 impl ToString for StringParameter {
     fn to_string(&self) -> String {
@@ -203,6 +203,12 @@ impl Parse for KeyMaps {
 #[derive(Debug, PartialEq, Eq)]
 pub struct LayerBody {
     pub(crate) maps: Punctuated<KeyMaps, Token![,]>,
+}
+
+impl LayerBody {
+    pub fn iter(&self) -> impl Iterator<Item = &KeyMaps> {
+        self.maps.iter()
+    }
 }
 
 impl Parse for LayerBody {

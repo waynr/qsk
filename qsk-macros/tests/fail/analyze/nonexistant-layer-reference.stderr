@@ -1,0 +1,8 @@
+error: layer reference does not exist
+
+         = help: existing layers include: {"ModLayer", "Navigation"}
+
+ --> tests/fail/analyze/nonexistant-layer-reference.rs:7:21
+  |
+7 |             F -> TT(Meow, F),
+  |                     ^^^^
