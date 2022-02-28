@@ -33,9 +33,7 @@ impl Nower for RealNower {
     }
 }
 
-pub fn key(k: KeyCode) -> Vec<ControlCode> {
-    vec![ControlCode::KeyMap(k)]
-}
+pub fn key(k: KeyCode) -> Vec<ControlCode> { vec![ControlCode::KeyMap(k)] }
 
 pub fn tap_toggle(layer: usize, kc: KeyCode) -> Vec<ControlCode> {
     vec![ControlCode::TapToggle(LayerRef::ByIndex(layer), kc)]
@@ -169,6 +167,10 @@ impl LayerComposer {
                 self.layers.get_mut(name.to_string()).unwrap().active = to
             },
         };
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &Layer> {
+        self.layers.iter()
     }
 }
 

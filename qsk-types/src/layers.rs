@@ -6,10 +6,21 @@ use crate::control_code::ControlCode;
 use crate::events::{InputEvent, EventCode, KeyCode};
 
 #[derive(Clone)]
+pub struct KeyMap(HashMap<EventCode, Vec<ControlCode>>);
+
+impl Index<EventCode> for KeyMap {
+    type Output = Vec<ControlCode>;
+
+    fn index(&self, index: EventCode) -> &Self::Output {
+        &self.0[&index]
+    }
+}
+
+#[derive(Clone)]
 pub struct Layer {
-    name: String,
-    map: HashMap<EventCode, Vec<ControlCode>>,
-    pub(crate) active: bool,
+    pub name: String,
+    map: KeyMap,
+    pub active: bool,
 }
 
 impl Layer {
@@ -20,13 +31,13 @@ impl Layer {
         });
         Layer {
             name,
-            map: new_map,
+            map: KeyMap(new_map),
             active,
         }
     }
 
     pub(crate) fn transform(&mut self, e: InputEvent) -> Option<Vec<ControlCode>> {
-        match (self.map.get(&e.code), self.active) {
+        match (self.map.0.get(&e.code), self.active) {
             (Some(ccs), true) => {
                 let mut output: Vec<ControlCode> = Vec::new();
                 for cc in ccs {
@@ -48,6 +59,10 @@ impl Layer {
 
     pub fn activate(&mut self) {
         self.active = true
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&EventCode, &Vec<ControlCode>)> {
+        self.map.0.iter()
     }
 }
 
@@ -92,5 +107,9 @@ impl Layers {
 
     pub(crate) fn get_mut(&mut self, key: String) -> Option<&mut Layer> {
         self.map.get_mut(&key)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &Layer> {
+        self.vec.iter()
     }
 }
