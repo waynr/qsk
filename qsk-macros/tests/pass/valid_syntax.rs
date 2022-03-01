@@ -1,7 +1,7 @@
-use qsk_macros::layer;
+use qsk_macros;
 
-fn main() {
-    layer!(
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    qsk_macros::layer!(
         ModLayer[Active]: {
             Y -> HOME,
             F -> TT(Navigation, F),
@@ -17,5 +17,6 @@ fn main() {
             K -> UP,
             SEMICOLON -> RIGHT,
         },
-    );
+    )?;
+    Ok(())
 }
