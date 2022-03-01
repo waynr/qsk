@@ -77,6 +77,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             F11 -> ESC,
             F12 -> ESC,
         },
+        // TODO: support number keys in various positions
+        // TestNumberKeys: {
+        //     0 -> TT(ModLayer, 0),
+        //     1 -> 3,
+        //     2 -> C,
+        //     3 -> D,
+        //     4 -> E,
+        //     5 -> F,
+        //     6 -> G,
+        //     7 -> H,
+        //     8 -> I,
+        //     9 -> J,
+        // },
     )?;
     Ok(())
 }
