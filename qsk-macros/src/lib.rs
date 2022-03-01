@@ -8,7 +8,7 @@ mod parse;
 
 #[proc_macro]
 #[proc_macro_error]
-pub fn layer(ts: TokenStream) -> TokenStream {
+pub fn remap(ts: TokenStream) -> TokenStream {
     let ast = parse::parse(ts.clone().into());
     let model = analyze::analyze(ast);
     let ir = lower::lower(model);

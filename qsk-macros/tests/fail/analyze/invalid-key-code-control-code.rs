@@ -1,7 +1,7 @@
-use qsk_macros::layer;
+use qsk_macros::remap;
 
 fn main() {
-    layer!(
+    remap!(
         ModLayer: {
             F -> MEOW,
         },

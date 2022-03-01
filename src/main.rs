@@ -36,7 +36,7 @@ async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
     let mut transformer: Box<dyn InputTransformer + Send>;
     transformer = Box::new(Passthrough {});
     if !matches.is_present("passthrough") {
-        let lc = qsk_macros::layer!(
+        let lc = qsk_macros::remap!(
             ModLayer[Active]: {
                 Y -> HOME,
                 F -> TT(Navigation, F),

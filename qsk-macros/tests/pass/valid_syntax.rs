@@ -1,7 +1,7 @@
 use qsk_macros;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    qsk_macros::layer!(
+    qsk_macros::remap!(
         ModLayer[Active]: {
             Y -> HOME,
             F -> TT(Navigation, F),
