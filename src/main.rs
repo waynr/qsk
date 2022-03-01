@@ -6,35 +6,20 @@ use async_compat::Compat;
 use async_std::prelude::FutureExt;
 use async_std::task;
 use clap::ArgMatches;
-use maplit::hashmap;
 
 mod cli;
 use cli::get_clap_app;
 
-use qsk_types::control_code::ControlCode;
-use qsk_types::events::KeyCode::*;
-use qsk_types::layers::Layer;
 use qsk_types::layer_composer::{
-    key, tap_toggle, InputTransformer, LayerComposer, Passthrough,
+    InputTransformer, Passthrough,
 };
+use qsk_macros;
 
 use qsk::device::linux::Device;
 use qsk::device::linux_evdev;
 use qsk::engine::QSKEngine;
 use qsk::listener::StdoutListener;
 use qsk::recorder::Recorder;
-
-#[derive(Clone, Debug, PartialEq, Copy)]
-enum LAYERS {
-    HomerowCodeRight = 0,
-    Navigation = 1,
-}
-
-impl From<LAYERS> for usize {
-    fn from(layer: LAYERS) -> usize {
-        layer as usize
-    }
-}
 
 async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
     let input_events_file = matches.value_of_t("device-file")?;
@@ -51,36 +36,24 @@ async fn remap(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
     let mut transformer: Box<dyn InputTransformer + Send>;
     transformer = Box::new(Passthrough {});
     if !matches.is_present("passthrough") {
-        let mut layers = Vec::with_capacity(8);
-        layers.insert(
-            LAYERS::HomerowCodeRight.into(),
-            Layer::from_hashmap(
-                String::from("ModLayer"),
-                hashmap!(
-                    KC_F => tap_toggle(LAYERS::Navigation.into(), KC_F)
-                ),
-                true,
-            ),
-        );
-        layers.insert(
-            LAYERS::Navigation.into(),
-            Layer::from_hashmap(
-                String::from("Navigation"),
-                hashmap!(
-                    KC_END => vec![ControlCode::Exit],
-                    KC_Y => key(KC_HOME),
-                    KC_U => key(KC_PAGEDOWN),
-                    KC_I => key(KC_PAGEUP),
-                    KC_O => key(KC_END),
-                    KC_H => key(KC_LEFT),
-                    KC_J => key(KC_DOWN),
-                    KC_K => key(KC_UP),
-                    KC_SEMICOLON => key(KC_RIGHT),
-                ),
-                false,
-            ),
-        );
-        transformer = Box::new(LayerComposer::from_layers(layers)?);
+        let lc = qsk_macros::layer!(
+            ModLayer[Active]: {
+                Y -> HOME,
+                F -> TT(Navigation, F),
+            },
+            Navigation: {
+                END -> Exit(),
+                Y -> HOME,
+                U -> PAGEDOWN,
+                I -> PAGEUP,
+                O -> END,
+                H -> LEFT,
+                J -> DOWN,
+                K -> UP,
+                SEMICOLON -> RIGHT,
+            },
+        )?;
+        transformer = Box::new(lc);
     }
 
     if let Some(path) = matches.value_of("log-keys-to") {

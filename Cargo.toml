@@ -15,6 +15,7 @@ path = "src/main.rs"
 [dependencies]
 # qsk crates
 qsk-types = { path = "qsk-types" }
+qsk-macros = { path = "qsk-macros" }
 
 # async stuff
 async-std = { version = "~1.10", features = ["unstable"] }
