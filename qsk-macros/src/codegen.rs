@@ -17,7 +17,7 @@ pub fn codegen(ir: lower::Ir) -> TokenStream {
                             match cc {
                                 lower::ControlCode::Key(control_code_path) => {
                                     quote!(
-                                        #key_path => vec![qsk_types::ControlCode::KeyMap(#control_code_path)]
+                                        (#key_path, vec![qsk_types::ControlCode::KeyMap(#control_code_path)])
                                     )
                                 },
                                 lower::ControlCode::TapToggle(tt) => {
@@ -26,12 +26,12 @@ pub fn codegen(ir: lower::Ir) -> TokenStream {
                                     let layer_ref_name = &tt.layer_ref.name;
                                     let tap_key = &tt.tap_key;
                                     quote!(
-                                        #key_path => vec![#tt_name(#layer_ref_path(#layer_ref_name.to_string()), #tap_key)]
+                                        (#key_path, vec![#tt_name(#layer_ref_path(#layer_ref_name.to_string()), #tap_key)])
                                     )
                                 },
                                 lower::ControlCode::Exit(path) => {
                                     quote!(
-                                        #key_path => vec![#path]
+                                        (#key_path, vec![#path])
                                     )
                                 },
                             }
@@ -42,9 +42,9 @@ pub fn codegen(ir: lower::Ir) -> TokenStream {
             quote!(
                 qsk_types::Layer::from_hashmap(
                     String::from(#name),
-                    hashmap!(
+                    std::collections::HashMap::from([
                         #(#maps),*
-                    ),
+                    ]),
                     #active,
                 )
             )
