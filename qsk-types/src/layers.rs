@@ -70,7 +70,7 @@ pub struct Layers {
     vec: Vec<Layer>,
     // TODO: learn how to implement a self-referential struct and make the key here a reference to
     // a layer's name and the Layer a reference to the named layer.
-    map: HashMap<String, Layer>,
+    // map: HashMap<String, Layer>,
 }
 
 impl Index<usize> for Layers {
@@ -89,13 +89,13 @@ impl IndexMut<usize> for Layers {
 
 impl From<Vec<Layer>> for Layers {
     fn from(vec: Vec<Layer>) -> Self {
-        let mut map: HashMap<String, Layer> = HashMap::new();
-        for layer in vec.clone().iter() {
-            map.insert(layer.name.clone(), layer.clone());
-        }
+        // let mut map: HashMap<String, Layer> = HashMap::new();
+        // for layer in vec.clone().iter() {
+        //     map.insert(layer.name.clone(), layer.clone());
+        // }
         Self {
             vec,
-            map,
+            // map,
         }
     }
 }
@@ -105,8 +105,14 @@ impl Layers {
         self.vec.iter_mut()
     }
 
-    pub(crate) fn get_mut(&mut self, key: String) -> Option<&mut Layer> {
-        self.map.get_mut(&key)
+    pub(crate) fn get_mut(&mut self, key: &str) -> Option<&mut Layer> {
+        // self.map.get_mut(key)
+        for layer in self.vec.iter_mut() {
+            if layer.name.as_str() == key {
+                return Some(layer)
+            }
+        }
+        None
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &Layer> {

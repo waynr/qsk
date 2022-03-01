@@ -145,7 +145,7 @@ impl LayerComposer {
                 self.layers[*index].active
             },
             LayerRef::ByName(name) => {
-                self.layers.get_mut(name.to_string()).unwrap().active
+                self.layers.get_mut(name).unwrap().active
             },
         }
     }
@@ -164,7 +164,7 @@ impl LayerComposer {
                 self.layers[*index].active = to
             },
             LayerRef::ByName(name) => {
-                self.layers.get_mut(name.to_string()).unwrap().active = to
+                self.layers.get_mut(name).unwrap().active = to
             },
         };
     }
