@@ -33,16 +33,6 @@ impl Nower for RealNower {
     }
 }
 
-pub fn key(k: KeyCode) -> Vec<ControlCode> { vec![ControlCode::KeyMap(k)] }
-
-pub fn tap_toggle(layer: usize, kc: KeyCode) -> Vec<ControlCode> {
-    vec![ControlCode::TapToggle(LayerRef::ByIndex(layer), kc)]
-}
-
-pub fn tap_toggle_by_name(name: String, kc: KeyCode) -> Vec<ControlCode> {
-    vec![ControlCode::TapToggle(LayerRef::ByName(name), kc)]
-}
-
 pub struct LayerComposer {
     base: Box<dyn InputTransformer + Send>,
     layers: Layers,
@@ -223,6 +213,17 @@ mod layer_composer {
             assert_that!(&self.transform(input).unwrap(), contains_in_order(output));
         }
     }
+
+    pub fn key(k: KeyCode) -> Vec<ControlCode> { vec![ControlCode::KeyMap(k)] }
+
+    pub fn tap_toggle(layer: usize, kc: KeyCode) -> Vec<ControlCode> {
+        vec![ControlCode::TapToggle(LayerRef::ByIndex(layer), kc)]
+    }
+
+    pub fn tap_toggle_by_name(name: String, kc: KeyCode) -> Vec<ControlCode> {
+        vec![ControlCode::TapToggle(LayerRef::ByName(name), kc)]
+    }
+
 
     #[derive(Clone)]
     struct FakeNow {
