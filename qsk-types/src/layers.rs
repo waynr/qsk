@@ -25,13 +25,12 @@ pub struct Layer {
 
 impl Layer {
     pub fn from_hashmap(name: String, map: HashMap<KeyCode, Vec<ControlCode>>, active: bool) -> Layer {
-        let mut new_map = HashMap::with_capacity(map.len());
-        map.iter().for_each(|(k, v)| {
-            new_map.insert(EventCode::KeyCode(*k), v.clone());
-        });
         Layer {
             name,
-            map: KeyMap(new_map),
+            map: KeyMap(map
+                .iter()
+                .map(|(k, v)| (EventCode::KeyCode(*k), v.clone()) )
+                .collect()),
             active,
         }
     }
