@@ -103,10 +103,10 @@ impl Layers {
     }
 
     pub(crate) fn get_mut(&mut self, key: &str) -> Option<&mut Layer> {
-        if let Some(idx) = self.map.get_mut(key) {
-            return Some(&mut self.vec[*idx])
+        match self.map.get_mut(key) {
+            Some(idx) => Some(&mut self.vec[*idx]),
+            None => None,
         }
-        None
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &Layer> {
