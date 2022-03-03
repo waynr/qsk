@@ -23,6 +23,21 @@ pub struct Layer {
     pub active: bool,
 }
 
+fn copy_control_codes_for_input_event(e: InputEvent, ccs: &Vec<ControlCode>) -> Vec<ControlCode> {
+    ccs.iter()
+        .map(|cc| {
+            match cc {
+                ControlCode::KeyMap(kc) => {
+                    let mut cloned = e.clone();
+                    cloned.code = EventCode::KeyCode(*kc);
+                    ControlCode::InputEvent(cloned)
+                }
+                _ => cc.clone(),
+            }
+        })
+        .collect()
+}
+
 impl Layer {
     pub fn from_hashmap(name: String, map: HashMap<KeyCode, Vec<ControlCode>>, active: bool) -> Layer {
         Layer {
@@ -37,20 +52,7 @@ impl Layer {
 
     pub(crate) fn transform(&mut self, e: InputEvent) -> Option<Vec<ControlCode>> {
         match (self.map.0.get(&e.code), self.active) {
-            (Some(ccs), true) => {
-                let mut output: Vec<ControlCode> = Vec::new();
-                for cc in ccs {
-                    match cc {
-                        ControlCode::KeyMap(kc) => {
-                            let mut cloned = e.clone();
-                            cloned.code = EventCode::KeyCode(*kc);
-                            output.push(ControlCode::InputEvent(cloned));
-                        }
-                        _ => output.push(cc.clone()),
-                    }
-                }
-                Some(output)
-            }
+            (Some(ccs), true) => Some(copy_control_codes_for_input_event(e.clone(), ccs)),
             (Some(_), false) => None,
             (None, _) => None,
         }
