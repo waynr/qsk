@@ -1,15 +1,14 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::Path;
 
 use crate::lower;
 
-impl lower::ControlCode {
-    fn to_tokenstream(&self, key_path: &Path) -> TokenStream {
-        match self {
+impl From<&lower::ControlCode> for TokenStream {
+    fn from(cc: &lower::ControlCode) -> TokenStream {
+        match cc {
             lower::ControlCode::Key(control_code_path) => {
                 quote!(
-                    (#key_path, vec![qsk_types::ControlCode::KeyMap(#control_code_path)])
+                    vec![qsk_types::ControlCode::KeyMap(#control_code_path)]
                 )
             },
             lower::ControlCode::TapToggle(tt) => {
@@ -18,12 +17,12 @@ impl lower::ControlCode {
                 let layer_ref_name = &tt.layer_ref.name;
                 let tap_key = &tt.tap_key;
                 quote!(
-                    (#key_path, vec![#tt_name(#layer_ref_path(#layer_ref_name.to_string()), #tap_key)])
+                    vec![#tt_name(#layer_ref_path(#layer_ref_name.to_string()), #tap_key)]
                 )
             },
             lower::ControlCode::Exit(path) => {
                 quote!(
-                    (#key_path, vec![#path])
+                    vec![#path]
                 )
             },
         }
@@ -32,9 +31,15 @@ impl lower::ControlCode {
 
 impl From<&lower::KeyMap> for TokenStream {
     fn from(km: &lower::KeyMap) -> Self {
+        let key_path = &km.key;
         km.control_code
             .iter()
-            .map(|cc| cc.to_tokenstream(&km.key))
+            .map(|cc| cc.into())
+            .map(|cc_ts: TokenStream| {
+                quote!(
+                    (#key_path, #cc_ts)
+                )
+            })
             .collect()
     }
 }
