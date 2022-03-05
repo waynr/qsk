@@ -1,7 +1,12 @@
 [package]
 name = "qsk-types"
 version = "0.1.0"
+authors = ["Wayne Warren <wayne.warren.s@gmail.com>"]
 edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Types used in qsk and qsk-macros."
+readme = false
+repository = "https://github.com/waynr/qsk"
 
 [dependencies]
 num = "~0.3"
