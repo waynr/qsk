@@ -806,6 +806,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "qsk"
+version = "0.1.0"
+dependencies = [
+ "async-compat",
+ "async-std",
+ "clap",
+ "evdev",
+ "evdev-rs",
+ "fern",
+ "futures",
+ "galvanic-assert",
+ "log",
+ "maplit",
+ "num",
+ "qsk-macros",
+ "qsk-types",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "qsk-macros"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -831,28 +853,6 @@ dependencies = [
  "serde_json",
  "strum",
  "strum_macros",
- "thiserror",
-]
-
-[[package]]
-name = "quantum-soft-keyboard"
-version = "0.1.0"
-dependencies = [
- "async-compat",
- "async-std",
- "clap",
- "evdev",
- "evdev-rs",
- "fern",
- "futures",
- "galvanic-assert",
- "log",
- "maplit",
- "num",
- "qsk-macros",
- "qsk-types",
- "serde",
- "serde_json",
  "thiserror",
 ]
 

@@ -1,5 +1,5 @@
 [package]
-name = "quantum-soft-keyboard"
+name = "qsk"
 version = "0.1.0"
 authors = ["Wayne Warren <wayne.warren.s@gmail.com>"]
 edition = "2018"
