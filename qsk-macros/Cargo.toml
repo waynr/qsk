@@ -1,7 +1,12 @@
 [package]
 name = "qsk-macros"
 version = "0.1.0"
+authors = ["Wayne Warren <wayne.warren.s@gmail.com>"]
 edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Remapping DSL macro to make qsk remapping more concise."
+readme = false
+repository = "https://github.com/waynr/qsk"
 
 [lib]
 proc-macro = true
