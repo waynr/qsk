@@ -6,6 +6,8 @@ use crate::errors::Result;
 use crate::events::{InputEvent, EventCode, KeyCode, KeyCode::*, KeyState::*};
 use crate::layers::{Layer, Layers};
 
+/// An `InputTransformer` that passes through all input events it receives save for `KC_PAUSE`,
+/// which it translates to `ControlCode::Exit`.
 pub struct Passthrough {}
 
 impl InputTransformer for Passthrough {
@@ -33,6 +35,9 @@ impl Nower for RealNower {
     }
 }
 
+/// LayerComposer is the "top-level" type involved in `qsk`'s layered approach to keyboard
+/// remapping. It works by iterating over the `Layer`s that it composes and applying the
+/// transformation from the first active layer it finds to the given `InputEvent`.
 pub struct LayerComposer {
     base: Box<dyn InputTransformer + Send>,
     layers: Layers,
