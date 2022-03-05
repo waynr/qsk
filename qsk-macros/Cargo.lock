@@ -177,6 +177,8 @@ dependencies = [
 [[package]]
 name = "qsk-types"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "392b7e0342d6023c2a39d12b75d6ce992f5443c6301adc024ed8139e96f298a1"
 dependencies = [
  "num",
  "num-derive",
