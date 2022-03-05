@@ -1,0 +1,5 @@
+error: invalid key code when converting parse::Key to KeyCode: VariantNotFound
+ --> tests/fail/analyze/invalid-key-code-keymap-key.rs:6:13
+  |
+6 |             MEOW -> F,
+  |             ^^^^

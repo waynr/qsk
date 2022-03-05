@@ -6,52 +6,70 @@ use crate::control_code::ControlCode;
 use crate::events::{InputEvent, EventCode, KeyCode};
 
 #[derive(Clone)]
+pub struct KeyMap(HashMap<EventCode, Vec<ControlCode>>);
+
+impl Index<EventCode> for KeyMap {
+    type Output = Vec<ControlCode>;
+
+    fn index(&self, index: EventCode) -> &Self::Output {
+        &self.0[&index]
+    }
+}
+
+#[derive(Clone)]
 pub struct Layer {
-    name: String,
-    map: HashMap<EventCode, Vec<ControlCode>>,
-    pub(crate) active: bool,
+    pub name: String,
+    map: KeyMap,
+    pub active: bool,
+}
+
+fn copy_control_codes_for_input_event(e: InputEvent, ccs: &Vec<ControlCode>) -> Vec<ControlCode> {
+    ccs.iter()
+        .map(|cc| {
+            match cc {
+                ControlCode::KeyMap(kc) => {
+                    let mut cloned = e.clone();
+                    cloned.code = EventCode::KeyCode(*kc);
+                    ControlCode::InputEvent(cloned)
+                }
+                _ => cc.clone(),
+            }
+        })
+        .collect()
 }
 
 impl Layer {
     pub fn from_hashmap(name: String, map: HashMap<KeyCode, Vec<ControlCode>>, active: bool) -> Layer {
-        let mut new_map = HashMap::with_capacity(map.len());
-        map.iter().for_each(|(k, v)| {
-            new_map.insert(EventCode::KeyCode(*k), v.clone());
-        });
         Layer {
             name,
-            map: new_map,
+            map: KeyMap(map
+                .iter()
+                .map(|(k, v)| (EventCode::KeyCode(*k), v.clone()) )
+                .collect()),
             active,
         }
     }
 
     pub(crate) fn transform(&mut self, e: InputEvent) -> Option<Vec<ControlCode>> {
-        match (self.map.get(&e.code), self.active) {
-            (Some(ccs), true) => {
-                let mut output: Vec<ControlCode> = Vec::new();
-                for cc in ccs {
-                    match cc {
-                        ControlCode::KeyMap(kc) => {
-                            let mut cloned = e.clone();
-                            cloned.code = EventCode::KeyCode(*kc);
-                            output.push(ControlCode::InputEvent(cloned));
-                        }
-                        _ => output.push(cc.clone()),
-                    }
-                }
-                Some(output)
-            }
+        match (self.map.0.get(&e.code), self.active) {
+            (Some(ccs), true) => Some(copy_control_codes_for_input_event(e.clone(), ccs)),
             (Some(_), false) => None,
             (None, _) => None,
         }
+    }
+
+    pub fn activate(&mut self) {
+        self.active = true
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&EventCode, &Vec<ControlCode>)> {
+        self.map.0.iter()
     }
 }
 
 pub struct Layers {
     vec: Vec<Layer>,
-    // TODO: learn how to implement a self-referential struct and make the key here a reference to
-    // a layer's name and the Layer a reference to the named layer.
-    map: HashMap<String, Layer>,
+    map: HashMap<String, usize>,
 }
 
 impl Index<usize> for Layers {
@@ -70,10 +88,10 @@ impl IndexMut<usize> for Layers {
 
 impl From<Vec<Layer>> for Layers {
     fn from(vec: Vec<Layer>) -> Self {
-        let mut map: HashMap<String, Layer> = HashMap::new();
-        for layer in vec.clone().iter() {
-            map.insert(layer.name.clone(), layer.clone());
-        }
+        let map: HashMap<String, usize> = vec.iter()
+            .enumerate()
+            .map(|(i, layer)| (layer.name.clone(), i))
+            .collect();
         Self {
             vec,
             map,
@@ -86,7 +104,14 @@ impl Layers {
         self.vec.iter_mut()
     }
 
-    pub(crate) fn get_mut(&mut self, key: String) -> Option<&mut Layer> {
-        self.map.get_mut(&key)
+    pub(crate) fn get_mut(&mut self, key: &str) -> Option<&mut Layer> {
+        match self.map.get_mut(key) {
+            Some(idx) => Some(&mut self.vec[*idx]),
+            None => None,
+        }
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &Layer> {
+        self.vec.iter()
     }
 }

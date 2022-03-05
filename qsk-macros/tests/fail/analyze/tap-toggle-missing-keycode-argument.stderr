@@ -1,0 +1,5 @@
+error: missing key code argument
+ --> tests/fail/analyze/tap-toggle-missing-keycode-argument.rs:6:18
+  |
+6 |             F -> TapToggle(Navigation),
+  |                  ^^^^^^^^^
