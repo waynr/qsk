@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, BTreeSet};
 use std::str::FromStr;
 
 use proc_macro_error::{abort, abort_call_site};
@@ -184,7 +184,7 @@ impl From<&Ast> for LayerComposer {
 // error messages using spans found on the Ast.
 pub fn validate_references(ast: &Ast) {
     // first construct set of all valid layer names
-    let valid_layer_names: HashSet<String> = ast.iter()
+    let valid_layer_names: BTreeSet<String> = ast.iter()
         .map(|layer| layer.name.to_string())
         .collect();
 
