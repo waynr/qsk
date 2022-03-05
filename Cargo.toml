@@ -14,12 +14,12 @@ path = "src/main.rs"
 
 [dependencies]
 # qsk crates
-qsk-types = { path = "qsk-types" }
-qsk-macros = { path = "qsk-macros" }
+qsk-types = "~0.1"
+qsk-macros = "~0.1"
 
 # async stuff
 async-std = { version = "~1.10", features = ["unstable"] }
-async-compat = "0.2.1" 
+async-compat = "0.2.1"
 maplit = "1.0"
 
 # cli
@@ -38,10 +38,8 @@ thiserror = "1.0"
 num = "~0.3"
 
 # device
-#evdev-rs = "~0.5"
-evdev-rs = { git = "https://github.com/waynr/evdev-rs", branch = "fix-cargo-rerun-if-changed" }
-#evdev = "~0.11"
-evdev = { path = "../evdev", features = ["tokio"]}
+evdev-rs = "~0.5"
+evdev = { version = "~0.11", features = ["tokio"] }
 futures = "~0.3"
 
 [dev-dependencies]

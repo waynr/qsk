@@ -282,7 +282,9 @@ dependencies = [
 
 [[package]]
 name = "evdev"
-version = "0.11.4"
+version = "0.11.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb04d90ec17561fda28364616cb7708d2ab3dc7f72597ef4d3ae557eb2eb1007"
 dependencies = [
  "bitvec",
  "futures-core",
@@ -294,7 +296,8 @@ dependencies = [
 [[package]]
 name = "evdev-rs"
 version = "0.5.0"
-source = "git+https://github.com/waynr/evdev-rs?branch=fix-cargo-rerun-if-changed#971df5fbda5399891124c54b8d8692037c3c5ab7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d7db51abf6b3205a6e6e8dd68d7a5414d7c50d61736a6f4c9b97df86ef5567cf"
 dependencies = [
  "bitflags",
  "evdev-sys",
@@ -305,7 +308,8 @@ dependencies = [
 [[package]]
 name = "evdev-sys"
 version = "0.2.4"
-source = "git+https://github.com/waynr/evdev-rs?branch=fix-cargo-rerun-if-changed#971df5fbda5399891124c54b8d8692037c3c5ab7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "80c71458f1f28b418779703f0fb17771f08562afacf0ee30176cca0e75e9e7d4"
 dependencies = [
  "cc",
  "libc",
@@ -612,9 +616,9 @@ dependencies = [
 
 [[package]]
 name = "ntapi"
-version = "0.3.6"
+version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f6bb902e437b6d86e03cce10a7e2af662292c5dfef23b65899ea3ac9354ad44"
+checksum = "c28774a7fd2fbb4f0babd8237ce554b73af68021b5f695a3cebd6c59bac0980f"
 dependencies = [
  "winapi",
 ]
@@ -804,6 +808,8 @@ dependencies = [
 [[package]]
 name = "qsk-macros"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1c730381ed50e6f016b358dc6dfd517f089a23f03d1f42c5d24bfdbf19350bfc"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -815,6 +821,8 @@ dependencies = [
 [[package]]
 name = "qsk-types"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "392b7e0342d6023c2a39d12b75d6ce992f5443c6301adc024ed8139e96f298a1"
 dependencies = [
  "num",
  "num-derive",
