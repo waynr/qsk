@@ -40,9 +40,15 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
-      - run: |
-        cd ${{ matrix.directory }}
+      - name: test
+        env:
+          DIRECTORY: ${{ matrix.directory }}
+        run: |
+        cd $DIRECTORY
         cargo test
-      - run: |
-        cd ${{ matrix.directory }}
+      - name: build
+        env:
+          DIRECTORY: ${{ matrix.directory }}
+        run: |
+        cd $DIRECTORY
         cargo build --release --all-features
