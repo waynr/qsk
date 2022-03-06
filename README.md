@@ -1,4 +1,4 @@
-# Quantum Soft Keyboard
+# qsk (aka Quantum Soft Keyboard)
 
 [<img alt="github" src="https://img.shields.io/badge/github-waynr/qsk?style=for-the-badge&labelColor=555555&logo=github" height="20">](https://github.com/waynr/qsk)
 [<img alt="crates.io" src="https://img.shields.io/crates/v/qsk.svg?style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/qsk)
@@ -23,25 +23,25 @@ with your 1990s era department store desktop computer.
 This feature set is still fairly small relative to QMK's quite prolific feature
 set. Features are implemented on an as-needed basis -- contributions welcome!
 
-# Usage
+# Usage (linux-only for now)
 
-## Try The Example Remapper (linux-only for now)
+## Try The Example Remapper
 
 Install:
 
-```
+```bash
 cargo install qsk
 ```
 
 Get a list of available devices:
 
-```
+```bash
 qsk list-devices
 ```
 
 After identifying the device you want to use, run the remapper:
 
-```
+```bash
 sudo qsk remap /path/to/device-file
 ```
 
@@ -59,7 +59,7 @@ keyboard remapping definitions must be compiled in. To make this easier, `qsk`
 provides a [`cargo-generate`](https://crates.io/crates/cargo-generate) template
 that helps you get started quickly to create a `qsk` project of your own:
 
-```
+```bash
 cargo generate --git https://github.com/waynr/qsk.git qsk-template
 ```
 
@@ -67,20 +67,20 @@ cargo generate --git https://github.com/waynr/qsk.git qsk-template
 project, one of which will be "Project Name". The value you pass to this will
 be the name of the directory of your new `qsk` project. To build it:
 
-```
+```bash
 cd <project_name>
 cargo build
 ```
 
 Get a list of available devices:
 
-```
+```bash
 ./target/debug/<project_name> list-devices
 ```
 
 After identifying the device you want to use, run the remapper:
 
-```
+```bash
 sudo ./target/debug/<project_name> remap /path/to/device-file
 ```
 
@@ -88,7 +88,7 @@ sudo ./target/debug/<project_name> remap /path/to/device-file
 
 The abovementioned template produces a `main.rs` that looks like the following:
 
-```
+```rust
 use std::error;
 
 use qsk_macros;
