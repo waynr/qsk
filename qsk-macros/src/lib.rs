@@ -19,7 +19,7 @@
 //!         K -> UP,
 //!         SEMICOLON -> RIGHT,
 //!     },
-//! )
+//! ).unwrap();
 //! ```
 //!
 //! This mini keyboard-remapping DSL expands into a Rust expression with the type
