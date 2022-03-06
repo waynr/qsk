@@ -24,8 +24,6 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    env:
-      PROJECT_NAME: mytemplate
     strategy:
       matrix:
         directory:
