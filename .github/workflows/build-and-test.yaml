@@ -50,3 +50,33 @@ jobs:
         run: |
           cd $DIRECTORY
           cargo build --release --all-features
+
+  qsk-template-reify-and-build:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_NAME: mytemplate
+    strategy:
+      matrix:
+        toolchain:
+          - stable
+          - beta
+          - nightly
+    steps:
+      - uses: actions/checkout@v2
+      - uses: cargo-generate/cargo-generate-action@v0.11.0
+        with:
+          name: ${{ env.PROJECT_NAME }}
+          template: function-like
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      # we need to move the generated project to a temp folder, away from the template project
+      # otherwise `cargo` runs would fail
+      # see https://github.com/rust-lang/cargo/issues/9922
+      - run: |
+          mv $PROJECT_NAME ${{ runner.temp }}/
+          cd ${{ runner.temp }}/$PROJECT_NAME
+          cargo build
