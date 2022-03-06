@@ -1,5 +1,10 @@
 # Quantum Soft Keyboard
 
+[<img alt="github" src="https://img.shields.io/badge/github-waynr/qsk?style=for-the-badge&labelColor=555555&logo=github" height="20">](https://github.com/waynr/qsk)
+[<img alt="crates.io" src="https://img.shields.io/crates/v/qsk.svg?style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/qsk)
+[<img alt="docs.rs" src="https://img.shields.io/badge/docs.rs-qsk?style=for-the-badge&labelColor=555555" height="20">](https://docs.rs/qsk)
+[<img alt="build status" src="https://img.shields.io/github/workflow/status/waynr/qsk/cargo%20build%20%26%20test/main?style=for-the-badge" height="20">](https://github.com/waynr/qsk/actions?query=branch%3Amain)
+
 The keyboard remapping software you never knew you wanted.
 
 Inspired by the open source keyboard firmware project,
@@ -11,7 +16,7 @@ with your 1990s era department store desktop computer.
 # Features
 
 * standard keyboard remapping, eg remap `F` -> `U`
-* composable layers of keymappings activated by specially-assigned keys
+* composable layers of keymappings activated by keys with special functionality
 * "tap toggle", which causes a given key to send its usual keystroke when
   tapped within a given time limit and to activate a specified layer while held
 
@@ -20,18 +25,135 @@ set. Features are implemented on an as-needed basis -- contributions welcome!
 
 # Usage
 
-Build:
+## Try The Example Remapper (linux-only for now)
+
+Install:
 
 ```
-git clone https://github.com/waynr/qsk
-cd qsk
+cargo install qsk
+```
+
+Get a list of available devices:
+
+```
+qsk list-devices
+```
+
+After identifying the device you want to use, run the remapper:
+
+```
+sudo qsk remap /path/to/device-file
+```
+
+**Note**: `sudo` is necessary above because by default your linux login
+user won't have the permissions necessary to grab your chosen keyboard input
+device nor to create new virtual keyboard device through which your remapped
+key strokes will be emitted.
+
+## Customize and Build Your Own Remapper
+
+The previous section describes how to use the binary shipped via crates.io,
+which for now can't have its keymaps customized. In the future it will be
+possible to pass it a path to a file with a keymapping DSL/script. For now,
+keyboard remapping definitions must be compiled in. To make this easier, `qsk`
+provides a [`cargo-generate`](https://crates.io/crates/cargo-generate) template
+that helps you get started quickly to create a `qsk` project of your own:
+
+```
+cargo generate --git https://github.com/waynr/qsk.git qsk-template
+```
+
+`cargo-generate` will prompt you for values to fill in the `qsk` template
+project, one of which will be "Project Name". The value you pass to this will
+be the name of the directory of your new `qsk` project. To build it:
+
+```
+cd <project_name>
 cargo build
 ```
 
-Run:
+Get a list of available devices:
+
 ```
-./target/debug/quantum-soft-keyboard -v /dev/input/by-path/<target-keyboard>
+./target/debug/<project_name> list-devices
 ```
+
+After identifying the device you want to use, run the remapper:
+
+```
+sudo ./target/debug/<project_name> remap /path/to/device-file
+```
+
+# The QSK Procedural Macro Remapping DSL
+
+The abovementioned template produces a `main.rs` that looks like the following:
+
+```
+use std::error;
+
+use qsk_macros;
+
+use qsk::entrypoint;
+
+fn main() -> Result<(), Box<dyn error::Error>> {
+    let layer_composer = qsk_macros::remap!(
+        ModLayer[Active]: {
+            Y -> HOME,
+            F -> TapToggle(Navigation, F),
+        },
+        Navigation: {
+            END -> Exit(),
+            Y -> HOME,
+            U -> PAGEDOWN,
+            I -> PAGEUP,
+            O -> END,
+            H -> LEFT,
+            J -> DOWN,
+            K -> UP,
+            SEMICOLON -> RIGHT,
+        },
+    )?;
+
+    entrypoint(layer_composer)?;
+    Ok(())
+}
+```
+
+This demonstrates the `qsk_macros::remap!` macro which takes as input a
+mini-DSL that simplifies definition of layered keyboard remapping. The only
+alternative to this currently would be defining a `qsk_types::LayerComposer`
+directly in Rust.
+
+There are several categories of identifier to be concerned with when defining
+keyboard remapping layers:
+
+* **`Layer Name`** are identifiers like `Navigation` and `ModLayer` shown above.
+    These names precede a colon with an optional set of square brackets and are
+    used by Key Functions. For example, `Navigation` in `TapToggle` indicates
+    that the `Navigation` layer should be activated when the key on the left
+    side of the `->` is held.
+* **`Layer Option`** are identifiers like `Active` in square brackets above.
+    These are used to configure individual layers.
+* **`Key Codes`** are identifiers like `K`, `END`, and `UP` shown above. On the
+    left side of a `->` the key code indicates the "input" key that will be
+    remapped. On the right side of a `->` this indicates what key code will be
+    output given the key code on the left.
+* **`Key Functions`** are identifies like `Exit` and `TapToggle` shown above. These
+    can only appear on the right side of a `->` and are used to bestow special
+    properties on the corresponding key indicated on the left side of the `->`.
+
+## Key Functions
+
+* **`TapToggle(<layer_ref>, <tap_key>)`** When the key on the left side of the
+    `->` is pressed and held, the layer named `<layer_ref>` is activated. When
+    it is tapped within the default tap toggle timeout (180 milliseconds).
+* **`Exit()`** When the key on the left side of the `->` is pressed, the
+    program will exit gracefully.
+
+## Layer Options
+
+* **`Active`** indicates that the layer should be set to "active" state on
+    program initialization.
 
 # Differences from QMK
 

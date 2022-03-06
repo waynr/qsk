@@ -1,13 +1,10 @@
 [package]
 name = "qsk"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Wayne Warren <wayne.warren.s@gmail.com>"]
-edition = "2018"
+edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Software keyboard remapper inspired by QMK."
-# note: README.md in this repo hasn't been written with publishing to docs.rs
-# in mind, so for now let's leave it out of the published docs
-readme = false
 repository = "https://github.com/waynr/qsk"
 
 [lib]
@@ -29,7 +26,7 @@ async-compat = "0.2.1"
 maplit = "1.0"
 
 # cli
-clap = "~3.0"
+clap = { version = "~3.0", features = ["cargo"] }
 fern = "~0.5" # log implementation
 
 # logging
