@@ -11,7 +11,7 @@ with your 1990s era department store desktop computer.
 # Features
 
 * standard keyboard remapping, eg remap `F` -> `U`
-* composable layers of keymappings activated by specially-assigned keys
+* composable layers of keymappings activated by keys with special functionality
 * "tap toggle", which causes a given key to send its usual keystroke when
   tapped within a given time limit and to activate a specified layer while held
 
@@ -20,17 +20,63 @@ set. Features are implemented on an as-needed basis -- contributions welcome!
 
 # Usage
 
-Build:
+## Try The Example Remapper (linux-only for now)
+
+Install:
 
 ```
-git clone https://github.com/waynr/qsk
-cd qsk
+cargo install qsk
+```
+
+Get a list of available devices:
+
+```
+qsk list-devices
+```
+
+After identifying the device you want to use, run the remapper:
+
+```
+sudo qsk remap /path/to/device-file
+```
+
+**Note**: `sudo` is necessary above because by default your linux login
+user won't have the permissions necessary to grab your chosen keyboard input
+device nor to create new virtual keyboard device through which your remapped
+key strokes will be emitted.
+
+## Customize and Build Your Own Remapper
+
+The previous section describes how to use the binary shipped via crates.io,
+which for now can't have its keymaps customized. In the future it will be
+possible to pass it a path to a file with a keymapping DSL/script. For now,
+keyboard remapping definitions must be compiled in. To make this easier, `qsk`
+provides a [`cargo-generate`](https://crates.io/crates/cargo-generate) template
+that helps you get started quickly to create a `qsk` project of your own:
+
+```
+cargo generate --git https://github.com/waynr/qsk.git qsk-template
+```
+
+`cargo-generate` will prompt you for values to fill in the `qsk` template
+project, one of which will be "Project Name". The value you pass to this will
+be the name of the directory of your new `qsk` project. To build it:
+
+```
+cd <project_name>
 cargo build
 ```
 
-Run:
+Get a list of available devices:
+
 ```
-./target/debug/quantum-soft-keyboard -v /dev/input/by-path/<target-keyboard>
+./target/debug/<project_name> list-devices
+```
+
+After identifying the device you want to use, run the remapper:
+
+```
+sudo ./target/debug/<project_name> remap /path/to/device-file
 ```
 
 # Differences from QMK
