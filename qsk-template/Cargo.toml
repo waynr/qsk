@@ -1,15 +1,13 @@
 [package]
-#name = "{{project-name}}"
-name = "qsk-template"
+name = "{{project-name}}"
 version = "0.1.0"
 edition = "2021"
-#authors = ["{{authors}}"]
+authors = ["{{authors}}"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 
-qsk = { path = "../" }
-#qsk = "~0.2"
+qsk = "~0.2"
 qsk-macros = "~0.1"
 qsk-types = "~0.1"
