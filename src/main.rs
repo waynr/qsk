@@ -3,6 +3,7 @@ use std::error;
 use qsk_macros;
 
 use qsk::entrypoint;
+
 fn main() -> Result<(), Box<dyn error::Error>> {
     let layer_composer = qsk_macros::remap!(
         ModLayer[Active]: {
