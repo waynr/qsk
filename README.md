@@ -84,6 +84,77 @@ After identifying the device you want to use, run the remapper:
 sudo ./target/debug/<project_name> remap /path/to/device-file
 ```
 
+# The QSK Procedural Macro Remapping DSL
+
+The abovementioned template produces a `main.rs` that looks like the following:
+
+```
+use std::error;
+
+use qsk_macros;
+
+use qsk::entrypoint;
+
+fn main() -> Result<(), Box<dyn error::Error>> {
+    let layer_composer = qsk_macros::remap!(
+        ModLayer[Active]: {
+            Y -> HOME,
+            F -> TapToggle(Navigation, F),
+        },
+        Navigation: {
+            END -> Exit(),
+            Y -> HOME,
+            U -> PAGEDOWN,
+            I -> PAGEUP,
+            O -> END,
+            H -> LEFT,
+            J -> DOWN,
+            K -> UP,
+            SEMICOLON -> RIGHT,
+        },
+    )?;
+
+    entrypoint(layer_composer)?;
+    Ok(())
+}
+```
+
+This demonstrates the `qsk_macros::remap!` macro which takes as input a
+mini-DSL that simplifies definition of layered keyboard remapping. The only
+alternative to this currently would be defining a `qsk_types::LayerComposer`
+directly in Rust.
+
+There are several categories of identifier to be concerned with when defining
+keyboard remapping layers:
+
+* **`Layer Name`** are identifiers like `Navigation` and `ModLayer` shown above.
+    These names precede a colon with an optional set of square brackets and are
+    used by Key Functions. For example, `Navigation` in `TapToggle` indicates
+    that the `Navigation` layer should be activated when the key on the left
+    side of the `->` is held.
+* **`Layer Option`** are identifiers like `Active` in square brackets above.
+    These are used to configure individual layers.
+* **`Key Codes`** are identifiers like `K`, `END`, and `UP` shown above. On the
+    left side of a `->` the key code indicates the "input" key that will be
+    remapped. On the right side of a `->` this indicates what key code will be
+    output given the key code on the left.
+* **`Key Functions`** are identifies like `Exit` and `TapToggle` shown above. These
+    can only appear on the right side of a `->` and are used to bestow special
+    properties on the corresponding key indicated on the left side of the `->`.
+
+## Key Functions
+
+* **`TapToggle(<layer_ref>, <tap_key>)`** When the key on the left side of the
+    `->` is pressed and held, the layer named `<layer_ref>` is activated. When
+    it is tapped within the default tap toggle timeout (180 milliseconds).
+* **`Exit()`** When the key on the left side of the `->` is pressed, the
+    program will exit gracefully.
+
+## Layer Options
+
+* **`Active`** indicates that the layer should be set to "active" state on
+    program initialization.
+
 # Differences from QMK
 
 Assuming you are familiar with QMK, you might be interested to know how this
