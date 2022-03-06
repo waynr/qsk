@@ -245,6 +245,7 @@ dependencies = [
  "atty",
  "bitflags",
  "indexmap",
+ "lazy_static",
  "os_str_bytes",
  "strsim",
  "termcolor",
@@ -807,7 +808,7 @@ dependencies = [
 
 [[package]]
 name = "qsk"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "async-compat",
  "async-std",
