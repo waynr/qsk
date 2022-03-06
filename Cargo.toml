@@ -29,7 +29,7 @@ async-compat = "0.2.1"
 maplit = "1.0"
 
 # cli
-clap = "~3.0"
+clap = { version = "~3.0", features = ["cargo"] }
 fern = "~0.5" # log implementation
 
 # logging

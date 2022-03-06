@@ -3,9 +3,8 @@ use std::error;
 use qsk_macros;
 
 use qsk::entrypoint;
-
 fn main() -> Result<(), Box<dyn error::Error>> {
-    let lc = qsk_macros::remap!(
+    let layer_composer = qsk_macros::remap!(
         ModLayer[Active]: {
             Y -> HOME,
             F -> TT(Navigation, F),
@@ -23,7 +22,6 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         },
     )?;
 
-    entrypoint(lc)?;
-
+    entrypoint(layer_composer)?;
     Ok(())
 }

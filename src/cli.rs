@@ -1,7 +1,12 @@
 use std::panic;
 
 use async_std;
-use clap::{App, Arg, ArgMatches};
+use clap::{App, Arg, ArgMatches, 
+    crate_name,
+    crate_authors,
+    crate_version,
+    crate_description,
+};
 use fern;
 use log;
 
@@ -40,7 +45,7 @@ pub fn get_clap_app() -> Result<ArgMatches, Box<dyn std::error::Error>> {
     let list_devices =
         App::new("list-devices").about("list keyboard-type devices available for remapping");
 
-    let matches = App::new("quantum soft keyboard")
+    let matches = App::new(crate_name!())
         .arg(
             Arg::new("verbose")
                 .short('v')
@@ -55,9 +60,9 @@ pub fn get_clap_app() -> Result<ArgMatches, Box<dyn std::error::Error>> {
                 "decreases the verbosity level; once suppresses warnings, twice suppresses errors.",
             ),
         )
-        .version("0.0")
-        .author("Wayne Warren <wayne.warren.s@gmail.com>")
-        .about("The keyboard remapping software you never knew you wanted.")
+        .version(crate_version!())
+        .author(crate_authors!("\n"))
+        .about(crate_description!())
         .subcommand(remap)
         .subcommand(listen)
         .subcommand(list_devices)
