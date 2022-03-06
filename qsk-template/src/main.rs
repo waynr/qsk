@@ -7,7 +7,6 @@ use qsk::entrypoint;
 fn main() -> Result<(), Box<dyn error::Error>> {
     let layer_composer = qsk_macros::remap!(
         ModLayer[Active]: {
-            Y -> HOME,
             F -> TT(Navigation, F),
         },
         Navigation: {
