@@ -1,0 +1,13 @@
+[package]
+name = "{{project-name}}"
+version = "0.1.0"
+edition = "2021"
+authors = ["{{authors}}"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+qsk = "~0.2"
+qsk-macros = "~0.1"
+qsk-types = "~0.1"
