@@ -44,11 +44,11 @@ jobs:
         env:
           DIRECTORY: ${{ matrix.directory }}
         run: |
-        cd $DIRECTORY
-        cargo test
+          cd $DIRECTORY
+          cargo test
       - name: build
         env:
           DIRECTORY: ${{ matrix.directory }}
         run: |
-        cd $DIRECTORY
-        cargo build --release --all-features
+          cd $DIRECTORY
+          cargo build --release --all-features
