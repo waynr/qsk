@@ -1,0 +1,48 @@
+name: cargo build & test
+on:
+  # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch
+  workflow_dispatch:
+  schedule:
+    - cron: '0 18 * * 5'
+  push:
+    branches: [ 'main' ]
+    paths-ignore:
+      - "**/docs/**"
+      - "**.md"
+  pull_request:
+    paths-ignore:
+      - "**/docs/**"
+      - "**.md"
+    types:
+      - opened
+      - reopened
+      - synchronized
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_NAME: mytemplate
+    strategy:
+      matrix:
+        directory:
+          - qsk-types
+          - qsk-macros
+          - ./
+        toolchain:
+          - stable
+          - beta
+          - nightly
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - run: |
+        cd ${{ directory }}
+        cargo test
+      - run: |
+        cd ${{ directory }}
+        cargo build --release --all-features
