@@ -68,20 +68,20 @@ project, one of which will be "Project Name". The value you pass to this will
 be the name of the directory of your new `qsk` project. To build it:
 
 ```bash
-cd <project_name>
+cd $PROJECT_NAME
 cargo build
 ```
 
 Get a list of available devices:
 
 ```bash
-./target/debug/<project_name> list-devices
+./target/debug/$PROJECT_NAME list-devices
 ```
 
 After identifying the device you want to use, run the remapper:
 
 ```bash
-sudo ./target/debug/<project_name> remap /path/to/device-file
+sudo ./target/debug/$PROJECT_NAME remap /path/to/device-file
 ```
 
 # The QSK Procedural Macro Remapping DSL
@@ -122,7 +122,8 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 This demonstrates the `qsk_macros::remap!` macro which takes as input a
 mini-DSL that simplifies definition of layered keyboard remapping. The only
 alternative to this currently would be defining a `qsk_types::LayerComposer`
-directly in Rust.
+directly in Rust. All you have to do in your generated project is to update the
+key mappings, save, and build.
 
 There are several categories of identifier to be concerned with when defining
 keyboard remapping layers:
